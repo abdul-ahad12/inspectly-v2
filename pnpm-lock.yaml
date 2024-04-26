@@ -30,6 +30,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      husky:
+        specifier: ^8.0.0
+        version: 8.0.3
       jest:
         specifier: ^29.4.1
         version: 29.7.0(@types/node@20.12.7)(babel-plugin-macros@2.8.0)(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5))
@@ -130,9 +133,6 @@ importers:
 
   apps/frontend/web:
     dependencies:
-      '@mechanic/sdk':
-        specifier: workspace:^
-        version: link:../../../shared/sdk
       next:
         specifier: 14.2.3
         version: 14.2.3(@babel/core@7.24.4)(babel-plugin-macros@2.8.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(sass@1.75.0)
@@ -165,7 +165,7 @@ importers:
         specifier: ^3.4.1
         version: 3.4.3(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5))
       typescript:
-        specifier: ^5.4.5
+        specifier: ^5
         version: 5.4.5
 
   shared/sdk:
@@ -3075,11 +3075,6 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     hasBin: true
 
-  glob@10.3.12:
-    resolution: {integrity: sha512-TCNv8vJ+xz4QiqTpfOJA7HvYv+tNIRHKfUWw/q+v2jdgN4ebz+KY9tGx5J4rHP0o84mNP+ApH66HRX8us3Khqg==}
-    engines: {node: '>=16 || 14 >=14.17'}
-    hasBin: true
-
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
 
@@ -3216,6 +3211,11 @@ packages:
   human-signals@2.1.0:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
+
+  husky@8.0.3:
+    resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
@@ -9452,14 +9452,6 @@ snapshots:
       minipass: 7.0.4
       path-scurry: 1.10.2
 
-  glob@10.3.12:
-    dependencies:
-      foreground-child: 3.1.1
-      jackspeak: 2.3.6
-      minimatch: 9.0.4
-      minipass: 7.0.4
-      path-scurry: 1.10.2
-
   glob@7.2.3:
     dependencies:
       fs.realpath: 1.0.0
@@ -9622,6 +9614,8 @@ snapshots:
       - supports-color
 
   human-signals@2.1.0: {}
+
+  husky@8.0.3: {}
 
   iconv-lite@0.4.24:
     dependencies:
@@ -11686,7 +11680,7 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
       commander: 4.1.1
-      glob: 10.3.12
+      glob: 10.3.10
       lines-and-columns: 1.2.4
       mz: 2.7.0
       pirates: 4.0.6

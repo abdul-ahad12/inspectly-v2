@@ -12,7 +12,8 @@
     "format:check": "pnpm format --check",
     "format:write": "pnpm format --write",
     "tsc": "pnpm exec nx run-many --target=tsc",
-    "validate": "pnpm format:write && pnpm lint"
+    "validate": "pnpm format:write && pnpm tsc && pnpm lint",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +26,8 @@
     "jest": "^29.4.1",
     "nx": "18.3.3",
     "prettier": "^3.0.0",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "husky": "^8.0.0"
   },
   "dependencies": {
     "next": "14.0.4",
