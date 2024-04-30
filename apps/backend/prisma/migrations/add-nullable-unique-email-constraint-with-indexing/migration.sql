@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX unique_user_email ON "User" (email) WHERE email IS NOT NULL

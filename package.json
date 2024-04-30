@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:debug": "npm exec nx run-many --target=build --verbose",
     "lint": "pnpm exec nx run-many --target=lint --verbose",
+    "lint:fix": "pnpm exec nx run-many --target=lint --fix --verbose",
     "build": "pnpm exec nx run-many --target=build",
     "format": "prettier  \"{apps,shared}/**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",
     "format:check": "pnpm format --check",

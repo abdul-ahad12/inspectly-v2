@@ -16,6 +16,12 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@utils/*": ["./src/common/utils/*"],
+      "@functions/*": ["./src/common/utils/functions/*"],
+      "@customTypes/*": ["./src/common/definitions/types/*"]
+    }
   }
 }
