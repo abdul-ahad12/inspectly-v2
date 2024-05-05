@@ -1,6 +1,6 @@
 {
   "name": "@mechanic/root",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "private": true,
   "config": {
@@ -11,6 +11,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "git-cz",
+    "release": "standard-version",
     "build:debug": "npm exec nx run-many --target=build --verbose",
     "lint": "pnpm exec nx run-many --target=lint --verbose",
     "lint:fix": "pnpm exec nx run-many --target=lint --fix --verbose",
