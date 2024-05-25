@@ -16,6 +16,12 @@ export class OnboardingAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest()
+    if (!request.headers.cookie) {
+      throw new HttpException(
+        'onboarding token missing!',
+        HttpStatus.UNAUTHORIZED,
+      )
+    }
     console.log(
       JSON.stringify(request.headers.cookie).split('=')[1].replace(/"/g, ''),
     )

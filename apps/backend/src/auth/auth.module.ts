@@ -10,22 +10,11 @@ import { UserModule } from '@/user/user.module'
 import { PrismaService } from '@/prisma/prisma.service'
 import { RedisModule } from '@/redis/redis.module'
 import { CustomerService } from '@/user/customer/customer.service'
+import { MechanicService } from '@/user/mechanic/mechanic.service'
+import { SocketGateway } from '@/gateways/socket.gateway'
+import { BookingService } from '@/booking/booking.service'
 
 @Module({
-  // imports: [
-  //   UserModule,
-  //   PassportModule,
-  //   JwtModule.registerAsync({
-  //     imports: [ConfigModule],
-  //     useFactory: async (configService: ConfigService) => ({
-  //       secret: configService.get('JWT_SECRET'),
-  //       signOptions: { expiresIn: '60d' },
-  //     }),
-  //     inject: [ConfigService],
-  //   }),
-  // ],
-  // controllers: [AuthController], // Register AuthController
-  // providers: [AuthService, JwtStrategy, OnboardingAuthGuard, RedisService], // Register AuthService and RedisService
   imports: [
     UserModule,
     RedisModule, // Make sure RedisService is available
@@ -45,7 +34,11 @@ import { CustomerService } from '@/user/customer/customer.service'
     JwtStrategy,
     RedisService,
     CustomerService,
+    MechanicService,
     PrismaService,
-  ], // RedisService might not need to be provided here if it's exported from RedisModule
+    SocketGateway,
+    BookingService,
+  ],
+  exports: [AuthService, CustomerService, JwtStrategy],
 })
 export class AuthModule {}

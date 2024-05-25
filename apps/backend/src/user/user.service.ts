@@ -48,8 +48,8 @@ export class UserService {
         phoneNumber: phoneNumber,
       },
       include: {
-        Customer: true,
-        Mechanic: true,
+        customer: true,
+        mechanic: true,
       },
     })
     if (!user) {
@@ -63,7 +63,7 @@ export class UserService {
     phoneNumber: string,
     isBanned: boolean,
   ): Promise<User> {
-    return this.prisma.user.update({
+    return await this.prisma.user.update({
       where: { phoneNumber },
       data: { isBanned },
     })

@@ -15,12 +15,14 @@ import { zodSignupRequestSchema } from 'src/common/definitions/zod/signupRequest
 import { Request, Response } from 'express'
 import { parseReqBodyAndValidate } from 'src/common/utils/parseReqBody'
 import { CustomerService } from './customer/customer.service'
+import { MechanicService } from './mechanic/mechanic.service'
 
 @Controller('user')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly customerService: CustomerService,
+    private readonly mechanicService: MechanicService,
   ) {}
 
   @Post('customer')
@@ -147,10 +149,12 @@ export class UserController {
         data: updatedCustomer,
       })
     } catch (error) {
-      res.status(HttpStatus.BAD_REQUEST).json({
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: `Could not find the customer with id:${params.id}`,
-        error: error,
+        message:
+          error.message || `Could not find the customer with id:${params.id}`,
+        error: error.name,
+        details: error,
       })
     }
   }
@@ -169,8 +173,8 @@ export class UserController {
       }
       const updatedCustomers =
         await this.customerService.updateMultipleCustomersByfilters(
-          JSON.parse(body.filter),
-          JSON.parse(body.update),
+          body.filter,
+          body.update,
         )
       res.status(HttpStatus.OK).json({
         success: true,
@@ -213,111 +217,189 @@ export class UserController {
     }
   }
 
-  // @Post('mechanic')
-  // @UsePipes(new ZodValidationPipe(zodSignupRequestSchema))
-  // createMechanic(@Req() req: Request, @Res() res: Response) {
-  //     const { body } = req
+  /************************
+   *************************
+   *  Mechanic Controllers  *
+   *************************
+   ************************/
 
-  //     // don't think this will ever execute because of the validation pipe.
-  //     // After verification, remove this.
-  //     if (!parseReqBodyAndValidate(zodSignupRequestSchema, body)) {
-  //         res.status(HttpStatus.BAD_REQUEST).json({
-  //             success: false,
-  //             message: 'The provided body is not of expected shape',
-  //             error: new Error("Bad Request: Body Type Invalid!"),
-  //         })
-  //     }
+  @Patch('mechanic/approve/:id')
+  async approveMechanic(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
 
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
+    console.log(id)
+    if (typeof id == 'string') {
+      const approvedUser = await this.mechanicService.approveMechanic(id)
+      if (!approvedUser) {
+        return undefined
+      }
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'mechanic succesfully approved',
+        data: approvedUser,
+      })
+    } else {
+      res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: 'Invalid Query Parameter',
+        error: 'Bad Request',
+      })
+    }
+  }
 
-  // @Get('')
-  // find(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
-  // @Get(':id')
-  // findById(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
-  // @Get(':phone')
-  // findByPhone(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
+  @Get('mechanics')
+  async getAllMechanics(@Res() res: Response) {
+    try {
+      const allMechanics = await this.mechanicService.getAllMechanics()
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found ${allMechanics.length} mechanics!`,
+        data: allMechanics,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message || 'Could not find mechanics',
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
 
-  // @Get('all')
-  // findAll(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
-  // @Patch(':id')
-  // updateById(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
+  @Get('mechanic/:id')
+  async getMechanicById(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+    if (!id) {
+    }
+    try {
+      const mechanic = await this.mechanicService.getMechanicById(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found mechanic!`,
+        data: mechanic,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
 
-  // @Delete(':id')
-  // deleteById(@Req() req: Request, @Res() res: Response) {
-  //     try {
-  //         const user: Promise<User | Error> = this.userService.create(body)
-  //         res.status(HttpStatus.CREATED).json({
-  //             success: true,
-  //             message: 'User Created Successfully',
-  //             data: user
-  //         })
-  //     } catch (error: unknown) {
-  //         throw error
-  //     }
-  // }
+  @Get(':id/mechanic')
+  async getMechanicByUserId(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+    if (!id) {
+    }
+    try {
+      const mechanic = await this.mechanicService.getMechanicByUserId(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found mechanic!`,
+        data: mechanic,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  @Patch('mechanic/:id')
+  async updateMechanicById(@Req() req: Request, @Res() res: Response) {
+    const { body, params } = req
+
+    try {
+      if (!params.id || !body.mechanic) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'The request is invalid,\n please provide a valid request',
+          error: new Error('Invalid Request Body'),
+        })
+      }
+      const updatedMechanic = await this.mechanicService.updateMechanicById(
+        params.id,
+        body.mechanic,
+      )
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found mechanic!`,
+        data: updatedMechanic,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  @Patch('mechanic')
+  async updateMechanicsByFilters(@Req() req: Request, @Res() res: Response) {
+    const { body } = req
+
+    try {
+      if (!body.filter || !body.update) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'The request is invalid,\n please provide a valid request',
+          error: new Error('Invalid Request Body'),
+        })
+      }
+      const updatedMechanics =
+        await this.mechanicService.updateMultipleMechanicsByfilters(
+          JSON.parse(body.filter),
+          JSON.parse(body.update),
+        )
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Updated Mechanics!`,
+        data: updatedMechanics,
+      })
+    } catch (error) {
+      res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: `Could not find the mechanics for given filters`,
+        error: error,
+      })
+    }
+  }
+
+  @Delete('mechanic/:id')
+  async deleteMechanicById(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+
+    try {
+      if (!id) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'The request is invalid,\n please provide a valid request',
+          error: new Error('Invalid Request Body'),
+        })
+      }
+      const deletedMechanic = await this.mechanicService.deleteMechanicById(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Deleted mechanic!`,
+        data: deletedMechanic,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
 }

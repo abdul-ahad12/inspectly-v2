@@ -160,8 +160,6 @@ export class AuthService {
       await this.redisService.del(resendsKey)
       await this.redisService.del(banKey)
 
-      // const user = await this.userService.getUserByPhoneNumber(phoneNumber)
-
       return true
     } else {
       throw new HttpException('OTP has expired.', HttpStatus.BAD_REQUEST)

@@ -10,18 +10,21 @@
     "tsc": "tsc --noEmit --pretty"
   },
   "dependencies": {
+    "axios": "^1.7.1",
+    "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.3"
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/axios": "^0.14.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.3"
+    "typescript": "^5"
   }
 }

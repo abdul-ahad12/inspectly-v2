@@ -1,30 +1,22 @@
 import { zodSignupRequestSchema } from '@/common/definitions/zod/signupRequestSchema'
-import { Injectable } from '@nestjs/common'
-import { Customer, Prisma, User } from '@prisma/client'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import {
+  Address,
+  Booking,
+  Customer,
+  Order,
+  Prisma,
+  Review,
+  StripeCustomerAccount,
+  User,
+  Vehicle,
+} from '@prisma/client'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { z } from 'zod'
 
 @Injectable()
 export class CustomerService {
   constructor(private readonly prisma: PrismaService) {}
-
-  // async createCustomer(user: User): Promise<Customer> {
-
-  //     const customer = await this.prisma.customer.create({
-  //         data: {
-  //             user: {
-  //                 connect: {
-  //                     id: user.id
-  //                 }
-  //             }
-  //         }
-  //     })
-  //     if (!customer) {
-  //         throw new Error("The user could not be created,\nplease check your details")
-  //     }
-
-  //     return customer;
-  // }
 
   async createCustomer(
     reqBody: z.infer<typeof zodSignupRequestSchema>,
@@ -47,14 +39,20 @@ export class CustomerService {
       isPhoneVerified: reqBody.isPhoneVerified,
       verifiedOn: reqBody.verifiedOn,
       role: reqBody.role,
-      Customer: {
+      customer: {
         create: {
           // email: reqBody.email,
         },
       },
     }
 
-    const user = await this.prisma.user.create({ data: prismaData })
+    const user = await this.prisma.user.create({
+      data: prismaData,
+      include: {
+        customer: true,
+        savedAddresses: true,
+      },
+    })
     if (!user) {
       // throw new Error("The user could not be created,\nplease check your details")
       console.error('The Customer could not be created')
@@ -72,7 +70,17 @@ export class CustomerService {
     return customers
   }
 
-  async getCustomerById(id: string): Promise<Customer> {
+  async getCustomerById(id: string): Promise<
+    Customer & {
+      user: User & {
+        savedAddresses: Address[]
+      }
+      bookings: Booking[]
+      cars: Vehicle[]
+      Order: Order[]
+      Review: Review[]
+    }
+  > {
     const customer = await this.prisma.customer.findUnique({
       where: {
         id: id,
@@ -81,7 +89,12 @@ export class CustomerService {
         bookings: true,
         cars: true,
         Order: true,
-        user: true,
+        user: {
+          include: {
+            savedAddresses: true,
+          },
+        },
+        Review: true,
       },
     })
     if (!customer) {
@@ -115,29 +128,86 @@ export class CustomerService {
   // update functions
   async updateCustomerById(
     id: string,
-    customer: Partial<Customer> | Prisma.CustomerUncheckedUpdateInput,
-  ): Promise<Customer> {
-    const newCustomer = await this.prisma.customer.update({
-      where: {
-        id: id,
-      },
-      data: customer,
-    })
-    if (!newCustomer) {
-      throw new Error(
-        `Could not update a customer with customerId:${id}\nPlease check your params`,
-      )
+    customer: Prisma.CustomerUncheckedUpdateInput,
+  ): Promise<
+    Customer & {
+      user: User
+      bookings: Booking[]
+      cars: Vehicle[]
+      Order: Order[]
+      Review: Review[]
+      stripeCustomerAccount?: StripeCustomerAccount
     }
-    return newCustomer
+  > {
+    try {
+      const newCustomer = await this.prisma.customer.update({
+        where: {
+          id: id,
+        },
+        data: { ...customer },
+        include: {
+          user: true,
+          bookings: true,
+          cars: true,
+          Order: true,
+          Review: true,
+          StripeCustomerAccount: true,
+        },
+      })
+      if (!newCustomer) {
+        throw new HttpException(
+          `Could not update a customer with customerId:${id}\nPlease check your params`,
+          HttpStatus.BAD_REQUEST,
+        )
+      }
+      return newCustomer
+    } catch (error) {
+      switch (true) {
+        case error instanceof Prisma.PrismaClientValidationError:
+          throw new HttpException(
+            {
+              message: error.message,
+              name: error.name,
+              stack: error.stack,
+            },
+            HttpStatus.BAD_REQUEST,
+          )
+        case error instanceof Prisma.PrismaClientKnownRequestError:
+          throw new HttpException(
+            {
+              message: error.message,
+              name: error.name,
+              stack: error.stack,
+              description: error.meta,
+              code: error.code,
+            },
+            HttpStatus.BAD_REQUEST,
+          )
+        case error instanceof Prisma.PrismaClientUnknownRequestError:
+          throw new HttpException(
+            {
+              message: error.message,
+              name: 'Prisma Unknown Req Error',
+            },
+            HttpStatus.BAD_REQUEST,
+          )
+        default:
+          throw new HttpException(
+            'An unexpected error occurred.',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          )
+      }
+    }
   }
 
   async updateMultipleCustomersByfilters(
     filter: Record<string, any>,
     update: Partial<Customer>,
   ): Promise<Customer[]> {
+    console.log(filter, update, 'filters')
     const batchPayload = await this.prisma.customer.updateMany({
       where: filter,
-      data: update,
+      data: { ...update },
     })
 
     // Query the updated customers based on the provided filter
