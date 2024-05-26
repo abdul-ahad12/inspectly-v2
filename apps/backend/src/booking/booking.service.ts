@@ -214,7 +214,14 @@ export class BookingService {
         owner: true,
         service: true,
         package: true,
-        vehicle: true,
+        vehicle: {
+          include: {
+            booking: true,
+            owner: true,
+            seller: true,
+            vehicleAddress: true,
+          },
+        },
       },
     })
 
@@ -240,6 +247,21 @@ export class BookingService {
     const bookings = await this.prismaService.booking.findMany({
       where: {
         mechanicId: id,
+      },
+      include: {
+        mechanic: true,
+        Order: true,
+        owner: true,
+        service: true,
+        package: true,
+        vehicle: {
+          include: {
+            booking: true,
+            owner: true,
+            seller: true,
+            vehicleAddress: true,
+          },
+        },
       },
     })
 
@@ -282,6 +304,21 @@ export class BookingService {
             },
           },
         ],
+      },
+      include: {
+        mechanic: true,
+        Order: true,
+        owner: true,
+        service: true,
+        package: true,
+        vehicle: {
+          include: {
+            booking: true,
+            owner: true,
+            seller: true,
+            vehicleAddress: true,
+          },
+        },
       },
     })
 

@@ -3,6 +3,16 @@ import { z } from 'zod'
 import { ZTransmissionEnum } from '../../enums/inspectionReports/ZTransmissionEnum'
 import { ZInspectionObjectSchema } from '../helpers/zInspectionObjectSchema'
 import { ZRecommendationSchema } from '../helpers/recommendationSchema'
+import {
+  bodyStructureKeys,
+  engineKeys,
+  finalCheckKeys,
+  interiorKeys,
+  suspensionKeys,
+  transmissionKeys,
+  wheelsTiresKeys,
+} from '../constants'
+import { mapUtility } from '../../zodUtils'
 
 const ZCreateInspectionReportRoSchema = z.object({
   odometer: z.number().int().positive(),
@@ -13,13 +23,13 @@ const ZCreateInspectionReportRoSchema = z.object({
   // }),
   vehicleColor: z.string(),
   transmission: ZTransmissionEnum,
-  engineAndPeripherals: ZInspectionObjectSchema,
-  transmissionDrivetrain: ZInspectionObjectSchema,
-  bodyStructure: ZInspectionObjectSchema,
-  interior: ZInspectionObjectSchema,
-  suspensionAndBrakes: ZInspectionObjectSchema,
-  wheelIsAndTires: ZInspectionObjectSchema,
-  finalChecks: ZInspectionObjectSchema,
+  engineAndPeripherals: mapUtility(engineKeys, ZInspectionObjectSchema),
+  transmissionDrivetrain: mapUtility(transmissionKeys, ZInspectionObjectSchema),
+  bodyStructure: mapUtility(bodyStructureKeys, ZInspectionObjectSchema),
+  interior: mapUtility(interiorKeys, ZInspectionObjectSchema),
+  suspensionAndBrakes: mapUtility(suspensionKeys, ZInspectionObjectSchema),
+  wheelIsAndTires: mapUtility(wheelsTiresKeys, ZInspectionObjectSchema),
+  finalChecks: mapUtility(finalCheckKeys, ZInspectionObjectSchema),
   additionalComments: z.string(),
   recommendation: ZRecommendationSchema,
   url: z.string().url(),
