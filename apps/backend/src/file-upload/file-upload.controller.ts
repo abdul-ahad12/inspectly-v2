@@ -93,6 +93,17 @@ export class FileUploadController {
     const ausIdentificationDoc = await this.pdfService.generatePdfBuffer(doc)
 
     const cook = req.headers.cookie.split('=')[1]
+    if (!cook || !req.headers.cookie.split) {
+      res.status(HttpStatus.FORBIDDEN).json({
+        success: false,
+        message: `Onboarding Token Expired or Invalid`,
+        error: {
+          name: 'FORBIDDEN',
+          message: 'Onboarding Token Expired or Invalid',
+          code: HttpStatus.FORBIDDEN,
+        },
+      })
+    }
     const jwtSecret = this.configService.get('ONBOARDING_JWT_SECRET')
     const pl = this.jwtService.verify(cook, {
       secret: jwtSecret,
