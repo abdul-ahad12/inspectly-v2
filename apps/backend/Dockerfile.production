@@ -1,0 +1,61 @@
+#stage 1: Builder
+
+FROM node:18-alpine AS builder
+
+WORKDIR /usr/src/app
+
+COPY package.json ./
+COPY . .
+
+RUN npm install -g pnpm
+RUN pnpm install
+RUN pnpm prisma generate
+
+
+RUN pnpm build
+
+#stage 2: production
+
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/dist ./dist/
+COPY --from=builder /usr/src/app/prisma ./prisma/
+COPY --from=builder /usr/src/app/.env ./.env
+COPY package.json ./
+
+ENV PG_PORT = ${PG_PORT}
+ENV POSTGRES_USER = ${POSTGRES_USER}
+ENV POSTGRES_DB = ${POSTGRES_DB}
+ENV POSTGRES_PASSWORD = ${POSTGRES_PASSWORD}
+ENV PGADMIN_EMAIL = ${PGADMIN_EMAIL}
+ENV PGADMIN_PASSWORD = ${PGADMIN_PASSWORD}
+ENV PGADMIN_PORT = ${PGADMIN_PORT}
+ENV TW_ACC_SID = ${TW_ACC_SID}
+ENV TW_AUTH_TOKEN = ${TW_AUTH_TOKEN}
+ENV TW_PHONE_NUMBER = ${TW_PHONE_NUMBER}
+ENV REDIS_HOST = ${REDIS_HOST}
+ENV REDIS_PORT = ${REDIS_PORT}
+ENV REDIS_PASSWORD = ${REDIS_PASSWORD}
+ENV JWT_SECRET = ${JWT_SECRET}
+ENV ONBOARDING_JWT_SECRET = ${ONBOARDING_JWT_SECRET}
+ENV ENCRYPTION_SECRET = ${ENCRYPTION_SECRET}
+ENV DOACCESS_KEY = ${DOACCESS_KEY}
+ENV DOSECRET_KEY = ${DOSECRET_KEY}
+ENV DOIMAGESBUCKETNAME = ${DOIMAGESBUCKETNAME}
+ENV NODE_ENV = ${NODE_ENV}
+ENV STRIPE_API_KEY = ${STRIPE_API_KEY}
+
+
+# Install only production dependencies
+RUN npm install -g pnpm
+RUN pnpm install --prod
+RUN npx prisma generate
+
+# Expose the ports for NestJS and Socket.IO
+EXPOSE 3000
+EXPOSE 3002
+
+
+CMD ["node", "dist/main.js"]
