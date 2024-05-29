@@ -424,18 +424,32 @@ export class AuthController {
 
     // don't think this will ever execute because of the validation pipe.
     // After verification, remove this.
-    if (!parseReqBodyAndValidate(ZCreateMechanicRoMainSchema, body)) {
-      res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        message: 'The provided body is not of expected shape',
-        error: ZCreateMechanicRoMainSchema.safeParse(body).error,
-      })
-    }
+    // if (!parseReqBodyAndValidate(ZCreateMechanicRoMainSchema, body)) {
+    //   res.status(HttpStatus.BAD_REQUEST).json({
+    //     success: false,
+    //     message: 'The provided body is not of expected shape',
+    //     error: ZCreateMechanicRoMainSchema.safeParse(body).error,
+    //   })
+    // }
 
     try {
       // Call the customerService.createCustomer method and await its result
       const mechanic = await this.mechanicService.createMechanic(body)
 
+      const token = await this.authService.generateJwtToken(mechanic)
+      console.log(token)
+      // Set the JWT in an HTTP-only cookie
+      res.cookie('auth-token', token, {
+        httpOnly: true,
+        path: '/',
+        maxAge: 2592000, // 1 hour; adjust to your needs
+        // secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+        secure: false, // Use HTTPS in production
+        sameSite: 'strict', // Adjust this according to your cross-site request needs
+      })
+
+      console.log('Token:', token)
+      console.log('Cookie set:', res.getHeader('Set-Cookie')) // Log the Set-Cookie header
       res.status(HttpStatus.CREATED).json({
         success: true,
         message: 'User Created Successfully',

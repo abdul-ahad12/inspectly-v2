@@ -6,6 +6,7 @@ import { SocketGateway } from '@/gateways/socket.gateway'
 import { RedisService } from '@/redis/redis.service'
 import { PaymentModule } from '@/payment/payment.module'
 import { MechanicService } from '@/user/mechanic/mechanic.service'
+import { JwtStrategy } from '@/auth/jwt.strategy'
 
 @Module({
   imports: [PaymentModule],
@@ -16,6 +17,7 @@ import { MechanicService } from '@/user/mechanic/mechanic.service'
     SocketGateway,
     RedisService,
     MechanicService,
+    JwtStrategy,
   ],
 })
 export class BookingModule {}

@@ -1,4 +1,5 @@
 // import { User } from '@/common/definitions/types';
+import { JwtStrategy } from '@/auth/jwt.strategy'
 import { BookingService } from '@/booking/booking.service'
 import { ZCreateMechanicRoMainSchema } from '@/common/definitions/zod/mech'
 import {
@@ -24,6 +25,7 @@ export class MechanicService {
     private readonly prisma: PrismaService,
     private readonly notificationService: SocketGateway,
     private readonly bookingService: BookingService,
+    private readonly jwtService: JwtStrategy,
   ) {}
   async createMechanic(
     reqBody: z.infer<typeof ZCreateMechanicRoMainSchema>,

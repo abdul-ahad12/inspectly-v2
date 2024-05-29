@@ -6,6 +6,7 @@ import { PrismaService } from 'src/prisma/prisma.service'
 import { MechanicService } from './mechanic/mechanic.service'
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { BookingService } from '@/booking/booking.service'
+import { JwtStrategy } from '@/auth/jwt.strategy'
 
 @Module({
   controllers: [UserController],
@@ -16,6 +17,7 @@ import { BookingService } from '@/booking/booking.service'
     PrismaService,
     SocketGateway,
     BookingService,
+    JwtStrategy,
   ],
   exports: [UserService],
 })
