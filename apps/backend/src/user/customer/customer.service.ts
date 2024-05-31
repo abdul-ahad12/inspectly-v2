@@ -224,10 +224,12 @@ export class CustomerService {
   }
 
   // delete functions
-  async deleteCustomerById(id: string): Promise<Customer> {
-    const deletedUser = await this.prisma.customer.delete({
+  async deleteCustomerById(id: string): Promise<any> {
+    const deletedUser = await this.prisma.user.deleteMany({
       where: {
-        id: id,
+        customer: {
+          id: id,
+        },
       },
     })
 
