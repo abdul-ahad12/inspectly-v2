@@ -54,13 +54,15 @@ export class MechanicService {
           certifications: reqBody.mechanic.certifications,
           licences: reqBody.mechanic.licences,
           hasAgreedToPolicies: reqBody.mechanic.hasAgreedToPolicies,
+          // available: true,
           available: false,
           vehicleTypes: reqBody.mechanic.vehicleTypes,
           vehicleUseType: 'NONCOMMERCIAL',
           vehicleWheels: 'FOUR',
           approvalRequest: {
             create: {
-              status: reqBody.approvalRequest.status || 'PENDING',
+              // status: reqBody.approvalRequest.status || 'PENDING',
+              status: 'ACCEPTED',
               certificate_3: reqBody.approvalRequest.certificate_3,
               certificate_4: reqBody.approvalRequest.certificate_4,
               publicLiabilityInsurance:
@@ -201,7 +203,7 @@ export class MechanicService {
 
   async findMechanicsAroundArea(
     findMechParams: IFindMechParams,
-  ): Promise<MechanicWithScore[]> {
+  ): Promise<MechanicWithScore[] | Mechanic[]> {
     const { latitude, longitude } = findMechParams
 
     // Calculate the bounding box for the search radius
@@ -277,6 +279,7 @@ export class MechanicService {
       findMechParams.bookingId,
     )
 
+    // send booking request notifications to all mechanics
     map(newMechs, (mechanic) =>
       this.notificationService.notifyMechanics(mechanic.id, booking),
     )

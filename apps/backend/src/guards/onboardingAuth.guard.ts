@@ -29,6 +29,8 @@ export class OnboardingAuthGuard implements CanActivate {
       .split('=')[1]
       .replace(/"/g, '')
 
+    console.log(token, request.body.phoneNumber)
+
     if (!token || !request?.body?.phoneNumber) {
       throw new HttpException(
         'onboarding token or phone number missing!',

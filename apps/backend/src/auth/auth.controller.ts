@@ -14,7 +14,6 @@ import { OnboardingAuthGuard } from '@/guards/onboardingAuth.guard'
 import { CustomerService } from '@/user/customer/customer.service'
 import { ZodValidationPipe } from '@/common/pipes/zod'
 import { zodSignupRequestSchema } from '@/common/definitions/zod/signupRequestSchema'
-import { parseReqBodyAndValidate } from '@/common/utils/parseReqBody'
 import { MechanicService } from '@/user/mechanic/mechanic.service'
 import { ZCreateMechanicRoMainSchema } from '@/common/definitions/zod/mech'
 
@@ -58,8 +57,8 @@ export class AuthController {
       // Set the JWT in an HTTP-only cookie
       res
         .status(HttpStatus.OK)
-        .cookie('Authentication', token, {
-          httpOnly: true,
+        .cookie('auth-token', token, {
+          httpOnly: false,
           path: '/',
           maxAge: 3600000, // 1 hour; adjust to your needs
           secure: process.env.NODE_ENV === 'PROD', // Use HTTPS in production
@@ -68,6 +67,7 @@ export class AuthController {
         .json({
           success: true,
           message: `User successfully authenticated!`,
+          data: user,
         })
     } catch (error) {
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
@@ -174,7 +174,7 @@ export class AuthController {
 
       // Set the JWT in an HTTP-only cookie
       res.cookie('onboarding-token', token, {
-        httpOnly: true,
+        httpOnly: false,
         path: '/',
         maxAge: 3600000, // 1 hour; adjust to your needs
         secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
@@ -254,22 +254,15 @@ export class AuthController {
 
     // don't think this will ever execute because of the validation pipe.
     // After verification, remove this.
-    if (!parseReqBodyAndValidate(zodSignupRequestSchema, body)) {
-      res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        message: 'The provided body is not of expected shape',
-        error: zodSignupRequestSchema.safeParse(body).error,
-      })
-    }
+    // if (!parseReqBodyAndValidate(zodSignupRequestSchema, body)) {
+    //   res.status(HttpStatus.BAD_REQUEST).json({
+    //     success: false,
+    //     message: 'The provided body is not of expected shape',
+    //     error: zodSignupRequestSchema.safeParse(body).error,
+    //   })
+    // }
 
     try {
-      console.log({
-        ...body,
-        isPhoneVerified: true,
-        // verifiedOn: Date.now(),
-        role: 'CUSTOMER',
-      })
-
       try {
         // Call the customerService.createCustomer method and await its result
         const customer = await this.customerService.createCustomer({
@@ -279,11 +272,23 @@ export class AuthController {
           role: 'CUSTOMER',
         })
 
-        res.status(HttpStatus.CREATED).json({
-          success: true,
-          message: 'User Created Successfully',
-          data: customer,
-        })
+        const token = await this.authService.generateJwtToken(customer)
+
+        res
+          .cookie('auth-token', token, {
+            httpOnly: false,
+            path: '/',
+            maxAge: 2592000, // 1 hour; adjust to your needs
+            // secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+            secure: false, // Use HTTPS in production
+            sameSite: 'strict', // Adjust this according to your cross-site request needs
+          })
+          .status(HttpStatus.CREATED)
+          .json({
+            success: true,
+            message: 'User Created Successfully',
+            data: customer,
+          })
       } catch (error: unknown) {
         res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
@@ -292,6 +297,7 @@ export class AuthController {
         })
       }
     } catch (error: unknown) {
+      console.log(error)
       res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'Could not create the user',
@@ -341,7 +347,7 @@ export class AuthController {
 
         // Set the JWT in an HTTP-only cookie
         res.cookie('onboarding-token', token, {
-          httpOnly: true,
+          httpOnly: false,
           path: '/',
           maxAge: 3600000, // 1 hour; adjust to your needs
           secure: process.env.NODE_ENV === 'production', // Use HTTPS in production

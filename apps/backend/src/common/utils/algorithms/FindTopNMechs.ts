@@ -23,18 +23,22 @@ const calculateMechanicScore = (mechanic: Mechanic): number => {
 const selectTopMechanics = (
   mechanics: Mechanic[],
   topN: number,
-): MechanicWithScore[] => {
+): MechanicWithScore[] | Mechanic[] => {
   // Calculate scores for each mechanic
-  const mechanicsWithScores = map(mechanics, (mechanic) => ({
-    ...mechanic,
-    score: calculateMechanicScore(mechanic),
-  }))
 
-  // Sort mechanics by score in descending order
-  const sortedMechanics = orderBy(mechanicsWithScores, ['score'], ['desc'])
+  if (topN < mechanics.length) {
+    const mechanicsWithScores = map(mechanics, (mechanic) => ({
+      ...mechanic,
+      score: calculateMechanicScore(mechanic),
+    }))
 
-  // Select top N mechanics
-  return take(sortedMechanics, topN)
+    // Sort mechanics by score in descending order
+    const sortedMechanics = orderBy(mechanicsWithScores, ['score'], ['desc'])
+
+    // Select top N mechanics
+    return take(sortedMechanics, topN)
+  }
+  return mechanics
 }
 
 export { selectTopMechanics }

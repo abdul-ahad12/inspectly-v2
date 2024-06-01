@@ -20,7 +20,7 @@ export class BookingController {
     private readonly mechanicService: MechanicService,
   ) {}
 
-  @Get('/find-mechanics')
+  @Post('/find-mechanics')
   async findAvailableMechs(@Req() req: Request, @Res() res: Response) {
     const mechanics = await this.mechanicService.findMechanicsAroundArea(
       req.body,
