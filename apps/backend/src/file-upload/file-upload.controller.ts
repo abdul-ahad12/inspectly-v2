@@ -155,12 +155,12 @@ export class FileUploadController {
   @Put('/inspection-images')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: memoryStorage(), // Temporarily store files in memory
+      storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|pdf)$/)) {
           return cb(
             new HttpException(
-              'Only image files are allowed!',
+              'Only image and PDF files are allowed!',
               HttpStatus.BAD_REQUEST,
             ),
             false,
@@ -171,25 +171,27 @@ export class FileUploadController {
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
     }),
   )
-  async uploadImages(@UploadedFiles() files: Express.Multer.File[]) {
+  async uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
     if (!files || files.length === 0) {
       throw new HttpException('No files uploaded!', HttpStatus.BAD_REQUEST)
     }
     const processedFiles = await Promise.all(
-      files.map(async (file) => {
-        const compressedBuffer = await this.sharpService
-          .edit(file.buffer)
-          .resize({ width: 1024 }) // Resize image to a width of 1024 pixels
-          .jpeg({ quality: 80 }) // Compress image to 80% quality
-          .toBuffer()
+      files.map(async (file: any) => {
+        let processedBuffer: any
 
-        console.log(compressedBuffer)
-        if (!compressedBuffer) {
+        if (file.mimetype.startsWith('image')) {
+          processedBuffer = await this.sharpService
+            .edit(file.buffer)
+            .resize({ width: 1024 }) // Resize image to a width of 1024 pixels
+            .jpeg({ quality: 80 }) // Compress image to 80% quality
+            .toBuffer()
+        } else if (file.mimetype === 'application/pdf') {
+          processedBuffer = file.buffer
         }
 
         return {
           fileName: `${Date.now().toString()}-${file.originalname}`,
-          file: compressedBuffer,
+          file: processedBuffer,
         }
       }),
     )

@@ -223,22 +223,22 @@ export class MechanicService {
     const mechanics = await this.prisma.mechanic.findMany({
       where: {
         AND: [
-          {
-            user: {
-              savedAddresses: {
-                some: {
-                  lat: {
-                    gte: latMin,
-                    lte: latMax,
-                  },
-                  long: {
-                    gte: lngMin,
-                    lte: lngMax,
-                  },
-                },
-              },
-            },
-          },
+          // {
+          //   user: {
+          //     savedAddresses: {
+          //       some: {
+          //         lat: {
+          //           gte: latMin,
+          //           lte: latMax,
+          //         },
+          //         long: {
+          //           gte: lngMin,
+          //           lte: lngMax,
+          //         },
+          //       },
+          //     },
+          //   },
+          // },
           {
             approvalRequest: {
               status: {
