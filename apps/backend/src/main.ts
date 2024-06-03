@@ -10,8 +10,8 @@ async function bootstrap() {
   // Enable CORS for a specific origin
   app.enableCors({
     origin: [
-      'https://mechanic.inspectly.com',
-      'https://customer.inspectly.com',
+      'https://mechanic.inspectly.com.au',
+      'https://customer.inspectly.com.au',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: 'Content-Type, Authorization',

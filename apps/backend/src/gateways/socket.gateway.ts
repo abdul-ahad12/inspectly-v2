@@ -15,7 +15,14 @@ type IBookingRequestData = Prisma.BookingGetPayload<{
   include: { Order: true; owner: true; vehicle: true; package: true }
 }>
 
-@WebSocketGateway(3002, { cors: { origin: 'http://localhost:3001/*' } })
+@WebSocketGateway(3002, {
+  cors: {
+    origin: [
+      'https://mechanic.inspectly.com.au',
+      'https://customer.inspectly.com.au',
+    ],
+  },
+})
 @UseInterceptors(WsLoggerInterceptor)
 export class SocketGateway implements OnGatewayInit {
   @WebSocketServer() server: Server
