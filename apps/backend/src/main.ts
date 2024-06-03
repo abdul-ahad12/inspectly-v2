@@ -13,7 +13,7 @@ async function bootstrap() {
       'https://mechanic.inspectly.com',
       'https://customer.inspectly.com',
     ],
-    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
   })
