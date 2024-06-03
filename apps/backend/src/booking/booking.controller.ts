@@ -7,6 +7,7 @@ import {
   Req,
   Res,
   HttpStatus,
+  Put,
 } from '@nestjs/common'
 import { BookingService } from './booking.service'
 import { Request, Response } from 'express'
@@ -97,6 +98,41 @@ export class BookingController {
           code: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error,
         },
+      })
+    }
+  }
+
+  @Put(':id')
+  async updateBookingByBookingId(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+
+    if (!id) {
+      res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: 'INVALID_REQUEST, no id param found.',
+        reason: `id param not found, ${id}`,
+        error: {
+          name: 'INVALID_REQUEST',
+          message: 'Invalid request, Parameter Id was not found',
+          code: HttpStatus.BAD_REQUEST,
+        },
+      })
+    }
+    try {
+      const updatedBooking = await this.bookingService.updateBookingStatus(
+        id,
+        req.body,
+      )
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: 'booking updated successfully',
+        data: updatedBooking,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message || 'UNEXPECTED_ERROR',
+        error: error,
       })
     }
   }

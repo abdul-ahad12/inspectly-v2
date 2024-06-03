@@ -375,6 +375,54 @@ export class BookingService {
     return `This action updates a  booking`
   }
 
+  async updateBookingStatus(
+    id: string,
+    bookingStatus: { isFullfilled: boolean },
+  ) {
+    const booking = await this.prismaService.booking.update({
+      where: {
+        id: id,
+      },
+      data: {
+        Order: {
+          update: {
+            where: {
+              bookingId: id,
+            },
+            data: {
+              isFullfilled: bookingStatus.isFullfilled,
+            },
+          },
+        },
+      },
+      include: {
+        InspectionReport: true,
+        mechanic: true,
+        Order: true,
+        owner: true,
+        package: true,
+        vehicle: true,
+        service: true,
+      },
+    })
+
+    if (!booking) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Could Not update the booking',
+          error: {
+            error: booking,
+            message: 'Possible Prisma Error',
+          },
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return booking
+  }
+
   remove(id: number) {
     return `This action removes a #${id} booking`
   }
