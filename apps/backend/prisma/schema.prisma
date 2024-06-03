@@ -255,7 +255,7 @@ model Order {
   package      Package  @relation(fields: [packageId], references: [id])
   packageId    String   @db.Uuid
   booking      Booking  @relation(fields: [bookingId], references: [id])
-  bookingId    String   @db.Uuid
+  bookingId    String   @unique @db.Uuid
   isFullfilled Boolean
   // paymentId given by the payments provider 
   paymentId    String?
