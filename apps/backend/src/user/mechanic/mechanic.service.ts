@@ -10,6 +10,7 @@ import { SocketGateway } from '@/gateways/socket.gateway'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { ApprovalRequest, Mechanic, Prisma, User } from '@prisma/client'
+import { map } from 'lodash'
 // import { map } from 'lodash'
 import { z } from 'zod'
 
@@ -275,14 +276,14 @@ export class MechanicService {
 
     // const newMechs = selectTopMechanics(mechanics, 5)
 
-    // const booking = await this.bookingService.getBookingByBookingId(
-    //   findMechParams.bookingId,
-    // )
+    const booking = await this.bookingService.getBookingByBookingId(
+      findMechParams.bookingId,
+    )
 
     // // send booking request notifications to all mechanics
-    // map(newMechs, (mechanic) =>
-    //   this.notificationService.notifyMechanics(mechanic.id, booking),
-    // )
+    map(mechanics, (mechanic) =>
+      this.notificationService.notifyMechanics(mechanic.id, booking),
+    )
 
     return mechanics
   }
