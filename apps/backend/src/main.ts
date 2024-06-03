@@ -9,7 +9,10 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1')
   // Enable CORS for a specific origin
   app.enableCors({
-    origin: 'http://localhost:3001',
+    origin: [
+      'https://mechanic.inspectly.com',
+      'https://customer.inspectly.com',
+    ],
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
