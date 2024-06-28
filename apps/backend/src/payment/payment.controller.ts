@@ -77,8 +77,8 @@ export class PaymentController {
       {
         paymentMethodType: Stripe.PaymentMethodCreateParams.Type
         details:
-          | Stripe.PaymentMethodCreateParams.Card1
-          | Stripe.PaymentMethodCreateParams.Card2
+          | Stripe.PaymentMethodCreateParams.Card
+          | Stripe.PaymentMethodCreateParams.Card
       }
     >,
     @Res() res: Response,
