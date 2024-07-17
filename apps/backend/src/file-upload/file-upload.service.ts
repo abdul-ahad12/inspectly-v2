@@ -1,7 +1,10 @@
+import { ZUploadVerificationDocRoSchema } from '@/common/definitions/zod/files'
+import { PaymentService } from '@/payment/payment.service'
 import { HeadObjectCommand, PutObjectCommand, S3 } from '@aws-sdk/client-s3'
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Readable } from 'stream'
+import { z } from 'zod'
 
 @Injectable()
 export class FileUploadService {
@@ -14,7 +17,10 @@ export class FileUploadService {
       secretAccessKey: this.configService.getOrThrow('DOSECRET_KEY'),
     },
   })
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly paymentService: PaymentService,
+  ) {}
 
   async upload(fileName: string, file: Express.Multer.File['buffer']) {
     try {
@@ -32,6 +38,32 @@ export class FileUploadService {
       throw err
     }
   }
+
+  async uploadVerificationDocs(
+    file: Express.Multer.File,
+    body: Omit<z.infer<typeof ZUploadVerificationDocRoSchema>, 'file'>,
+  ) {
+    try {
+      return await this.paymentService.uploadVerificationDocs(
+        file,
+        body.purpose,
+        body.fileName,
+      )
+    } catch (error) {
+      console.error(error)
+      throw new HttpException(
+        {
+          success: false,
+          type: 'unknown_exception',
+          message:
+            'An unexpected error occured on server, please try again in some time',
+          error: error,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+
   async uploadImages(
     fileName: string,
     file: Express.Multer.File['buffer'],

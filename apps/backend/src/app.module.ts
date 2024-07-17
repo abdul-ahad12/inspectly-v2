@@ -11,6 +11,8 @@ import { BookingModule } from './booking/booking.module'
 import { PaymentModule } from './payment/payment.module'
 import { InspectionServiceModule } from './inspection-service/inspection-service.module'
 import { InspectionReportModule } from './inspection-report/inspection-report.module'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
 
 @Module({
   imports: [
@@ -27,12 +29,23 @@ import { InspectionReportModule } from './inspection-report/inspection-report.mo
     MulterModule.register({
       dest: './upload',
     }),
-
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60 * 60,
+        limit: 2,
+      },
+    ]),
     FileUploadModule,
     BookingPackageModule,
     BookingModule,
     InspectionServiceModule,
     InspectionReportModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {

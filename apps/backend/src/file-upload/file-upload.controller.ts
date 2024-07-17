@@ -2,15 +2,19 @@ import {
   Controller,
   HttpException,
   HttpStatus,
+  Param,
   ParseFilePipe,
   Put,
+  Query,
   Req,
   Res,
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
 import {
   FileFieldsInterceptor,
+  FileInterceptor,
   FilesInterceptor,
 } from '@nestjs/platform-express'
 import { memoryStorage } from 'multer'
@@ -24,6 +28,10 @@ import { getFolderStructure } from '@/common/utils/functions/digitalOcean/getFol
 // import sharp from 'sharp';
 // import pAll from 'p-all'
 import { SharpService } from 'nestjs-sharp'
+import { z } from 'zod'
+// import { ZUploadVerificationDocRoSchema } from '@/common/definitions/zod/files'
+import { ZstripeDocUploadPurposeEnum } from '@/common/definitions/zod/enums/files/stripe/purpose'
+import { PaymentService } from '@/payment/payment.service'
 
 @Controller('file-upload')
 export class FileUploadController {
@@ -33,6 +41,7 @@ export class FileUploadController {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly sharpService: SharpService,
+    private readonly paymentService: PaymentService,
   ) {}
 
   @Put('mech')
@@ -206,5 +215,37 @@ export class FileUploadController {
       url: upload.Location,
       key: upload.Key,
     }))
+  }
+
+  @Put('stripe/mech-verification/:purpose')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('purpose') purpose: z.infer<typeof ZstripeDocUploadPurposeEnum>,
+    @Query('fileName') fileName: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    try {
+      const stripeFile = await this.uploadService.uploadVerificationDocs(file, {
+        purpose,
+        fileName,
+      })
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `${fileName} uploaded to stipe.`,
+        data: stripeFile,
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(error.code || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          'An unexpected error occured,\nPlease try again in some time',
+        code: error.code || HttpStatus.INTERNAL_SERVER_ERROR,
+        error: error,
+      })
+    }
   }
 }

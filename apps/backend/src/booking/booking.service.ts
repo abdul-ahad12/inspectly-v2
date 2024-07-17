@@ -75,6 +75,7 @@ export class BookingService {
                   city: vehicle.vehicleAddress.city,
                   street: vehicle.vehicleAddress.street,
                   suburb: vehicle.vehicleAddress.suburb,
+                  state: vehicle.vehicleAddress.state,
                   zipcode: vehicle.vehicleAddress.zipcode,
                   name: vehicle.vehicleAddress.name ?? null,
                   landmark: vehicle.vehicleAddress.landmark ?? null,

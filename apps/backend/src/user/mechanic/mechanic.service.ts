@@ -1,12 +1,16 @@
 // import { User } from '@/common/definitions/types';
 import { JwtStrategy } from '@/auth/jwt.strategy'
 import { BookingService } from '@/booking/booking.service'
-import { ZCreateMechanicRoMainSchema } from '@/common/definitions/zod/mech'
+import {
+  ZCreateMechanicRoMainSchema,
+  ZcreateConnectAccountRoSchema,
+} from '@/common/definitions/zod/mech'
 import {
   MechanicWithScore,
   // selectTopMechanics,
 } from '@/common/utils/algorithms/FindTopNMechs'
 import { SocketGateway } from '@/gateways/socket.gateway'
+import { PaymentService } from '@/payment/payment.service'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { ApprovalRequest, Mechanic, Prisma, User } from '@prisma/client'
@@ -27,7 +31,64 @@ export class MechanicService {
     private readonly notificationService: SocketGateway,
     private readonly bookingService: BookingService,
     private readonly jwtService: JwtStrategy,
+    private readonly paymenentService: PaymentService,
   ) {}
+
+  async createConnectAccount(
+    body: z.infer<typeof ZcreateConnectAccountRoSchema>,
+  ) {
+    try {
+      const mechConnectAccount =
+        await this.paymenentService.createConnectAccount(body)
+      console.log(mechConnectAccount)
+      if (!mechConnectAccount) {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Connect Account Not Created',
+            error: {
+              message: "Couldn't create Mechanics's Connect Account",
+              code: HttpStatus.BAD_REQUEST,
+              error: mechConnectAccount,
+            },
+          },
+          HttpStatus.BAD_REQUEST,
+        )
+      }
+      const personAccount = await this.paymenentService.createPersonAccount({
+        ...body.individual,
+        accountId: mechConnectAccount.id,
+      })
+      console.log(personAccount)
+
+      if (!personAccount) {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Connect Account Not Created',
+            error: {
+              message: "Couldn't create Mechanics's Connect Account",
+              code: HttpStatus.BAD_REQUEST,
+              error: personAccount,
+            },
+          },
+          HttpStatus.BAD_REQUEST,
+        )
+      }
+      return { mechConnectAccount, personAccount }
+    } catch (error) {
+      console.error(error)
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Connect Account Not Created',
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+
   async createMechanic(
     reqBody: z.infer<typeof ZCreateMechanicRoMainSchema>,
   ): Promise<User> {
@@ -44,6 +105,7 @@ export class MechanicService {
           long: reqBody.address.long,
           street: reqBody.address.street,
           suburb: reqBody.address.suburb,
+          state: reqBody.address.state,
           city: reqBody.address.city,
         },
       },
@@ -79,6 +141,7 @@ export class MechanicService {
                   long: reqBody.address.long,
                   street: reqBody.address.street + ' workshop',
                   suburb: reqBody.address.suburb,
+                  state: reqBody.address.state,
                   city: reqBody.address.city,
                 },
               },

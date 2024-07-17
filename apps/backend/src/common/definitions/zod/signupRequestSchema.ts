@@ -12,6 +12,7 @@ const zodAddressSchema = z.object({
   street: z.string(),
   suburb: z.string(),
   city: z.string(),
+  state: z.string(),
 })
 
 const zodSignupRequestSchema = z.object({

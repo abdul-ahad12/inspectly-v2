@@ -58,7 +58,7 @@ services:
       context: .
       dockerfile: ./Dockerfile.production
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=PRODUCTION
       - DATABASE_URL=postgresql://mechApp:ultraProMaxSecretPassword@mechanic_db:5432/mechanic?schema=public
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}

@@ -58,6 +58,14 @@ export class RedisService implements OnModuleInit {
     await this.redisClient.set(key, value, expiryMode, time || 300)
   }
 
+  async incr(key: string): Promise<number> {
+    return await this.redisClient.incr(key)
+  }
+
+  async expire(key: string, seconds: number | string): Promise<number> {
+    return await this.redisClient.expire(key, seconds)
+  }
+
   async get(key: string): Promise<string | null> {
     return await this.redisClient.get(key)
   }

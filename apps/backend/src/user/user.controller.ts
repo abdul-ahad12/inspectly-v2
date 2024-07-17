@@ -1,7 +1,5 @@
 import {
   Controller,
-  Post,
-  UsePipes,
   Req,
   Res,
   HttpStatus,
@@ -10,12 +8,10 @@ import {
   Delete,
 } from '@nestjs/common'
 import { UserService } from './user.service'
-import { ZodValidationPipe } from 'src/common/pipes/zod'
-import { zodSignupRequestSchema } from 'src/common/definitions/zod/signupRequestSchema'
 import { Request, Response } from 'express'
-import { parseReqBodyAndValidate } from 'src/common/utils/parseReqBody'
 import { CustomerService } from './customer/customer.service'
 import { MechanicService } from './mechanic/mechanic.service'
+import { REAgentService } from './real-estate-agent/agent.service'
 
 @Controller('user')
 export class UserController {
@@ -23,50 +19,8 @@ export class UserController {
     private readonly userService: UserService,
     private readonly customerService: CustomerService,
     private readonly mechanicService: MechanicService,
+    private readonly agentService: REAgentService,
   ) {}
-
-  @Post('customer')
-  @UsePipes(new ZodValidationPipe(zodSignupRequestSchema))
-  async createCustomer(@Req() req: Request, @Res() res: Response) {
-    const { body } = req
-
-    // don't think this will ever execute because of the validation pipe.
-    // After verification, remove this.
-    if (!parseReqBodyAndValidate(zodSignupRequestSchema, body)) {
-      res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        message: 'The provided body is not of expected shape',
-        error: zodSignupRequestSchema.safeParse(body).error,
-      })
-    }
-
-    try {
-      const user = await this.userService.createUser(body)
-
-      try {
-        // Call the customerService.createCustomer method and await its result
-        const customer = await this.customerService.createCustomer(user)
-
-        res.status(HttpStatus.CREATED).json({
-          success: true,
-          message: 'User Created Successfully',
-          data: customer,
-        })
-      } catch (error: unknown) {
-        res.status(HttpStatus.BAD_REQUEST).json({
-          success: false,
-          message: 'Could not create the customer',
-          error: error,
-        })
-      }
-    } catch (error: unknown) {
-      res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        message: 'Could not create the user',
-        error: error,
-      })
-    }
-  }
 
   @Get('customer')
   async getAllCustomers(@Res() res: Response) {
@@ -391,6 +345,168 @@ export class UserController {
         success: true,
         message: `Deleted mechanic!`,
         data: deletedMechanic,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  /************************
+   *************************
+   *  Agents  Controllers  *
+   *************************
+   ************************/
+
+  @Get('re-agent')
+  async getAllREAgents(@Res() res: Response) {
+    try {
+      const reAgents = await this.agentService.getAllREAgents()
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found ${reAgents.length} real estate agents!`,
+        data: reAgents,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: error.message || 'Could not find mechanics',
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  @Get('re-agent/:id')
+  async getReAgentById(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+    if (!id) {
+    }
+    try {
+      const reAgent = await this.agentService.getREAgentById(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found real estate agent!`,
+        data: reAgent,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  @Get(':id/re-agent')
+  async getReAgentByUserId(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+    if (!id) {
+    }
+    try {
+      const reAgent = await this.agentService.getREAgentByUserId(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found real estate agents!`,
+        data: reAgent,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  @Patch('re-agent/:id')
+  async updateReAgentById(@Req() req: Request, @Res() res: Response) {
+    const { body, params } = req
+
+    try {
+      if (!params.id || !body.mechanic) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'The request is invalid,\n please provide a valid request',
+          error: new Error('Invalid Request Body'),
+        })
+      }
+      const updatedAgent = await this.agentService.updateREAgentById(
+        params.id,
+        body.mechanic,
+      )
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Updated Real estate agent!`,
+        data: updatedAgent,
+      })
+    } catch (error) {
+      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          error.message ||
+          `An Unexpected Error Occured.\n Please try again after some time.`,
+        error: error.name || 'Internal Server Error',
+      })
+    }
+  }
+
+  //  @Patch('mechanic')
+  //  async updateMechanicsByFilters(@Req() req: Request, @Res() res: Response) {
+  //    const { body } = req
+
+  //    try {
+  //      if (!body.filter || !body.update) {
+  //        res.status(HttpStatus.BAD_REQUEST).json({
+  //          success: false,
+  //          message: 'The request is invalid,\n please provide a valid request',
+  //          error: new Error('Invalid Request Body'),
+  //        })
+  //      }
+  //      const updatedMechanics =
+  //        await this.mechanicService.updateMultipleMechanicsByfilters(
+  //          JSON.parse(body.filter),
+  //          JSON.parse(body.update),
+  //        )
+  //      res.status(HttpStatus.OK).json({
+  //        success: true,
+  //        message: `Updated Mechanics!`,
+  //        data: updatedMechanics,
+  //      })
+  //    } catch (error) {
+  //      res.status(HttpStatus.BAD_REQUEST).json({
+  //        success: false,
+  //        message: `Could not find the mechanics for given filters`,
+  //        error: error,
+  //      })
+  //    }
+  //  }
+
+  @Delete('re-agent/:id')
+  async deleteReAgentById(@Req() req: Request, @Res() res: Response) {
+    const { id } = req.params
+
+    try {
+      if (!id) {
+        res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'The request is invalid,\n please provide a valid request',
+          error: new Error('Invalid Request Body'),
+        })
+      }
+      const deletedAgent = await this.agentService.deleteREAgentById(id)
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Deleted real Estate Agent!`,
+        data: deletedAgent,
       })
     } catch (error) {
       res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({

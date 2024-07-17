@@ -8,13 +8,16 @@ import {
   Res,
   HttpStatus,
   Put,
+  UseGuards,
 } from '@nestjs/common'
 import { BookingService } from './booking.service'
 import { Request, Response } from 'express'
 import { MechanicService } from '@/user/mechanic/mechanic.service'
 import { ICreateBookingRoSchema } from '@/common/definitions/zod/bookings/create'
+import { ThrottlerGuard } from '@nestjs/throttler'
 
 @Controller('booking')
+@UseGuards(ThrottlerGuard)
 export class BookingController {
   constructor(
     private readonly bookingService: BookingService,

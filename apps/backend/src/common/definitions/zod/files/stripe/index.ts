@@ -1,0 +1,1 @@
+export * from './uploadVerificationDocsRo.schema'

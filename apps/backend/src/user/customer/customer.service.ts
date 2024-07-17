@@ -32,6 +32,7 @@ export class CustomerService {
           long: reqBody.address.long,
           street: reqBody.address.street,
           suburb: reqBody.address.suburb,
+          state: reqBody.address.state,
           city: reqBody.address.city,
         },
       },

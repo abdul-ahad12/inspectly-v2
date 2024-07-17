@@ -2,11 +2,19 @@ import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 import * as cookieParser from 'cookie-parser'
 import { IoAdapter } from '@nestjs/platform-socket.io'
+import { VersioningType } from '@nestjs/common'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
   app.useWebSocketAdapter(new IoAdapter())
-  app.setGlobalPrefix('api/v1')
+  // app.useGlobalGuards(new ThrottlerGuard());
+
+  // Enable versioning
+  app.enableVersioning({
+    type: VersioningType.URI,
+    prefix: 'api/v',
+    defaultVersion: '1',
+  })
   // Enable CORS for a specific origin
   app.enableCors({
     origin: [

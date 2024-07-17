@@ -21,6 +21,7 @@ export class UserService {
           lat: reqBody.address.lat,
           long: reqBody.address.long,
           street: reqBody.address.street,
+          state: reqBody.address.state,
           suburb: reqBody.address.suburb,
           city: reqBody.address.city,
         },
@@ -46,6 +47,24 @@ export class UserService {
     const user = await this.prisma.user.findUnique({
       where: {
         phoneNumber: phoneNumber,
+      },
+      include: {
+        customer: true,
+        mechanic: true,
+        savedAddresses: true,
+      },
+    })
+    if (!user) {
+      // throw new Error("Invalid Phone Number, Could not find a user for given phone number")
+      return undefined
+    }
+    return user
+  }
+
+  async getUserById(id: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: id,
       },
       include: {
         customer: true,

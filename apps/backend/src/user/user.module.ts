@@ -7,6 +7,8 @@ import { MechanicService } from './mechanic/mechanic.service'
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { BookingService } from '@/booking/booking.service'
 import { JwtStrategy } from '@/auth/jwt.strategy'
+import { PaymentModule } from '@/payment/payment.module'
+import { REAgentService } from './real-estate-agent/agent.service'
 
 @Module({
   controllers: [UserController],
@@ -14,10 +16,12 @@ import { JwtStrategy } from '@/auth/jwt.strategy'
     UserService,
     CustomerService,
     MechanicService,
+    REAgentService,
     PrismaService,
     SocketGateway,
     BookingService,
     JwtStrategy,
+    PaymentModule,
   ],
   exports: [UserService],
 })

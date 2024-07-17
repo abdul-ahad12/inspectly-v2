@@ -11,6 +11,7 @@ const ZCreateAddressRoSchema = z.object({
   street: z.string(),
   suburb: z.string(),
   city: z.string(),
+  state: z.string(),
 })
 
 export { ZCreateAddressRoSchema }

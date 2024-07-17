@@ -4,6 +4,7 @@ type Address = {
   zipcode: string
   street: string
   suburb: string
+  state: string
   city: string
 }
 

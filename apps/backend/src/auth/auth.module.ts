@@ -13,6 +13,7 @@ import { CustomerService } from '@/user/customer/customer.service'
 import { MechanicService } from '@/user/mechanic/mechanic.service'
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { BookingService } from '@/booking/booking.service'
+import { REAgentService } from '@/user/real-estate-agent/agent.service'
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { BookingService } from '@/booking/booking.service'
     RedisService,
     CustomerService,
     MechanicService,
+    REAgentService,
     PrismaService,
     SocketGateway,
     BookingService,

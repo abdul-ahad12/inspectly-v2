@@ -12,6 +12,12 @@ import { BookingService } from '@/booking/booking.service'
 import { Order, StripeCustomerAccount } from '@prisma/client'
 import { updateTransactionInJsonArray } from '@/common/utils/functions/arrays'
 import { formatISO } from 'date-fns'
+import { z } from 'zod'
+import {
+  ZcreateConnectAccountRoSchema,
+  ZcreatePersonsAccountRoSchema,
+} from '@/common/definitions/zod/mech'
+// import { ZUploadVerificationDocRoSchema } from '@/common/definitions/zod/files'
 
 interface IcreatePaymentIntentResponse {
   paymentIntent: Stripe.Response<Stripe.PaymentIntent>
@@ -29,6 +35,240 @@ export class PaymentService {
     private readonly customerService: CustomerService,
     private readonly bookingService: BookingService,
   ) {}
+
+  async uploadVerificationDocs(
+    file: Express.Multer.File,
+    purpose: Stripe.FileCreateParams.Purpose,
+    fileName: string,
+  ): Promise<Stripe.File> {
+    const fileUpload = await this.paymentClient.files.create({
+      file: {
+        data: file.buffer,
+        name: fileName,
+        type: 'application.octet-stream',
+      },
+      purpose,
+    })
+
+    if (!fileUpload.object) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Ivalid Request, please check your request parameters.',
+          error: {
+            message: 'Invalid Request',
+            code: HttpStatus.BAD_REQUEST,
+          },
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+    return fileUpload
+  }
+
+  async createPersonAccount(
+    body: z.infer<typeof ZcreatePersonsAccountRoSchema>,
+  ) {
+    try {
+      const personAccount = await this.paymentClient.accounts.createPerson(
+        body.accountId,
+        {
+          address: {
+            country: 'AU',
+            city: body.address.city,
+            line1: body.address.line1,
+            line2: body.address.line2,
+            postal_code: body.address.postal_code,
+            state: body.address.state,
+          },
+          dob: {
+            day: body.dob.day,
+            month: body.dob.month,
+            year: body.dob.year,
+          },
+          first_name: body.first_name,
+          last_name: body.last_name,
+          email: body.email,
+          gender: body.gender,
+          id_number: body.id_number,
+          phone: body.phone,
+          relationship: {
+            owner: body.relationship.owner,
+            representative: true,
+          },
+          verification: {
+            document: {
+              back: body.id_back,
+              front: body.id_front,
+            },
+          },
+        },
+      )
+
+      if (!personAccount) {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Person Not Created',
+            error: {
+              message: "Couldn't create Person's Account",
+              code: HttpStatus.BAD_REQUEST,
+              error: personAccount,
+            },
+          },
+          HttpStatus.BAD_REQUEST,
+        )
+      }
+      return personAccount
+    } catch (error) {
+      console.error(error)
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Person Not Created',
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+
+  async createConnectAccount(
+    body: z.infer<typeof ZcreateConnectAccountRoSchema>,
+  ) {
+    try {
+      const connectAccount = await this.paymentClient.accounts.create({
+        // type: 'custom',
+        country: 'AU',
+
+        business_type: 'company',
+        controller: {
+          fees: {
+            payer: 'application',
+          },
+          losses: {
+            payments: 'application',
+          },
+          requirement_collection: 'application',
+          stripe_dashboard: {
+            type: 'none',
+          },
+        },
+        documents: {
+          bank_account_ownership_verification: {
+            files: body.documents.bank_account_ownership_verification,
+          },
+          company_license: {
+            files: body.documents.licence,
+          },
+          company_registration_verification: {
+            files: body.documents.registration,
+          },
+        },
+        // individual: {
+        //   address: {
+        //     country: 'AU',
+        //     city: body.individual.address.city,
+        //     line1: body.individual.address.line1,
+        //     line2: body.individual.address.line2,
+        //     postal_code: body.individual.address.postal_code,
+        //     state: body.individual.address.state
+        //   },
+        //   dob: {
+        //     day: body.individual.dob.day,
+        //     month: body.individual.dob.month,
+        //     year: body.individual.dob.year
+        //   },
+        //   first_name: body.individual.first_name,
+        //   last_name: body.individual.last_name,
+        //   email: body.individual.email,
+        //   gender: body.individual.gender,
+        //   id_number: body.individual.id_number,
+        //   phone: body.individual.phone,
+        //   relationship: {
+        //     owner: body.individual.relationship.owner
+        //   },
+        //   verification: {
+        //     document: {
+        //       back: body.individual.id_back,
+        //       front: body.individual.id_front
+        //     }
+        //   }
+        // },
+        company: {
+          address: body.address,
+          name: body.company_name,
+          owners_provided: true,
+          structure: 'sole_proprietorship',
+          tax_id: body.tax_id,
+          registration_number: body.abn,
+          phone: body.phone,
+          verification: {
+            document: {
+              back: body.individual.id_back,
+              front: body.individual.id_front,
+            },
+          },
+        },
+        capabilities: {
+          au_becs_debit_payments: {
+            requested: true,
+          },
+          card_payments: {
+            requested: true,
+          },
+          transfers: {
+            requested: true,
+          },
+        },
+        external_account: {
+          account_number: '000123456',
+          routing_number: '110000',
+          country: 'AU',
+          currency: 'AUD',
+          account_holder_name: 'Shaik Noorullah',
+          object: 'bank_account',
+          account_holder_type: '',
+        },
+
+        tos_acceptance: {
+          date: Number(body.tos_acceptance.date),
+          ip: body.tos_acceptance.ip,
+        },
+        business_profile: {
+          mcc: body.business_profile.mcc,
+          url: body.business_profile.url,
+        },
+      })
+
+      if (!connectAccount) {
+        throw new HttpException(
+          {
+            success: false,
+            message: 'Person Not Created',
+            error: {
+              message: "Couldn't create Person's Account",
+              code: HttpStatus.BAD_REQUEST,
+              error: connectAccount,
+            },
+          },
+          HttpStatus.BAD_REQUEST,
+        )
+      }
+      return connectAccount
+    } catch (error) {
+      console.error(error)
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Person Not Created',
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+    }
+  }
+
   async createPaymentIntent(
     orderId: string,
     customerId: string,
