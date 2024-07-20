@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Param,
-  Delete,
   Req,
   Res,
   HttpStatus,
@@ -208,10 +207,5 @@ export class BookingController {
         },
       })
     }
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.bookingService.remove(+id)
   }
 }

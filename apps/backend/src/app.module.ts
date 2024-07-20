@@ -13,6 +13,7 @@ import { InspectionServiceModule } from './inspection-service/inspection-service
 import { InspectionReportModule } from './inspection-report/inspection-report.module'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
+import { ReBookingModule } from './re-booking/re-booking.module'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { APP_GUARD } from '@nestjs/core'
     BookingModule,
     InspectionServiceModule,
     InspectionReportModule,
+    ReBookingModule,
   ],
   providers: [
     {

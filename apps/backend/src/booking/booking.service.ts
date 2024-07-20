@@ -372,10 +372,6 @@ export class BookingService {
     return booking
   }
 
-  async getPendingBookings() {
-    return `This action updates a  booking`
-  }
-
   async updateBookingStatus(
     id: string,
     bookingStatus: { isFullfilled: boolean },
@@ -422,9 +418,5 @@ export class BookingService {
     }
 
     return booking
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} booking`
   }
 }

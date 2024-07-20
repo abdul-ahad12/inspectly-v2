@@ -19,6 +19,7 @@ datasource db {
   extensions = [uuidOssp(map: "uuid-ossp")]
 }
 
+// user roles
 enum UserRole {
   ADMIN
   CUSTOMER
@@ -27,6 +28,7 @@ enum UserRole {
   REAGENT
 }
 
+// for mechanics
 enum ApprovalStatus {
   PENDING
   ACCEPTED
@@ -34,6 +36,15 @@ enum ApprovalStatus {
   REUPLOAD_REQUESTED
 }
 
+enum MechanicExperience {
+  UnderOneYear
+  UnderTwoYears
+  UnderThreeYears
+  UnderFiveYears
+  MoreThanFiveYears
+}
+
+// vehicle enums
 enum VehicleType {
   SEDAN
   HATCHBACK
@@ -61,19 +72,19 @@ enum VehicleWheels {
   FOUR
 }
 
+enum Transmission {
+  AUTOMATIC
+  MANUAL
+  HYBRID
+}
+
+// for Real estate agents
+
 enum AreasOfSpecialization {
   RESIDENTIAL
   COMMERCIAL
   INDUSTRIAL
   LAND
-}
-
-enum MechanicExperience {
-  UnderOneYear
-  UnderTwoYears
-  UnderThreeYears
-  UnderFiveYears
-  MoreThanFiveYears
 }
 
 enum RealEstateAgentExperience {
@@ -84,31 +95,55 @@ enum RealEstateAgentExperience {
   MoreThanFiveYears
 }
 
-model Address {
-  id              String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  ///FAKE: faker.location.latitude()
-  lat             Float
-  ///FAKE: faker.location.longitude()
-  long            Float
-  ///FAKE: faker.location.zipCode('####')
-  zipcode         String
-  ///FAKE: faker.location.street()
-  street          String
-  suburb          String
-  ///FAKE: faker.location.cityName()
-  city            String
-  state           String
-  name            String?
-  landmark        String?
-  User            User?             @relation(fields: [userId], references: [id])
-  userId          String?           @db.Uuid
-  ApprovalRequest ApprovalRequest[]
-  Vehicle         Vehicle[]
-  RealEstateAgent RealEstateAgent[]
+// This is an enum for the condition of the property
+enum PropertyCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+}
 
-  @@unique([street, suburb, city, zipcode])
-  @@index([zipcode])
-  @@index([suburb])
+// This is an enum for the crime rate in the area
+enum CrimeRate {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// This is an enum for the neighborhood vibe
+enum NeighborhoodVibe {
+  FAMILY_FRIENDLY
+  QUIET
+  BUSTLING
+  TRENDY
+  OTHER
+}
+
+enum DealType {
+  RENTAL
+  LEASE
+  PURCHASE
+}
+
+enum PurchaseReason {
+  INVESTMENT
+  RESIDENCE
+}
+
+enum OccupierType {
+  FAMILY
+  BACHELOR
+}
+
+enum PropertyType {
+  APARTMENT
+  CONDO
+  LAND
+  OFFICE_SPACE
+  STANDALONE
+  FARM_HOUSE
+  PENT_HOUSE
+  OTHER
 }
 
 model User {
@@ -167,6 +202,8 @@ model RealEstateAgent {
   // reviewId    String  @db.Uuid
   addressId                  String                       @db.Uuid
   RealEstateInspectionReport RealEstateInspectionReport[]
+  RE_Booking                 RE_Booking[]
+  RE_Order                   RE_Order[]
 
   @@unique([userId, phoneNumber])
   @@index([available])
@@ -209,6 +246,36 @@ model Mechanic {
   @@index([phoneNumber])
 }
 
+model ApprovalRequest {
+  id                             String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  status                         ApprovalStatus
+  certificate_3                  String
+  certificate_4                  String?
+  publicLiabilityInsurance       String
+  professionalIndemnityInsurance String?
+  ausIdentificationDoc           String
+  ABN                            String
+  workshopAddress                Address?           @relation(fields: [addressId], references: [id])
+  addressId                      String             @db.Uuid
+  experience                     MechanicExperience
+  Mechanic                       Mechanic           @relation(fields: [mechanicId], references: [id])
+  mechanicId                     String             @unique @db.Uuid
+
+  @@unique([status, id, experience, ABN])
+}
+
+model Review {
+  id         String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  isVerified Boolean?
+  message    String?
+  rating     Float
+  photos     String[]
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String   @db.Uuid
+  Mechanic   Mechanic @relation(fields: [mechanicId], references: [id])
+  mechanicId String   @db.Uuid
+}
+
 model Customer {
   id                    String                 @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   profilePic            String?
@@ -222,10 +289,50 @@ model Customer {
   Order                 Order[]
   Review                Review[]
   StripeCustomerAccount StripeCustomerAccount?
+  RE_Order              RE_Order[]
+  RE_Booking            RE_Booking[]           @relation("RE_BookingOwner")
+  Property              Property[]             @relation("InspectionFor")
 
   @@unique([userId, phoneNumber])
   @@index([id])
   @@index([phoneNumber])
+}
+
+model StripeCustomerAccount {
+  id               String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  stripeCustomerId String
+  paymentIntents   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
+  paymentMethods   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
+  customer         Customer @relation(fields: [customerId], references: [id])
+  customerId       String   @unique @db.Uuid
+}
+
+model Address {
+  id              String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  ///FAKE: faker.location.latitude()
+  lat             Float
+  ///FAKE: faker.location.longitude()
+  long            Float
+  ///FAKE: faker.location.zipCode('####')
+  zipcode         String
+  ///FAKE: faker.location.street()
+  street          String
+  suburb          String
+  ///FAKE: faker.location.cityName()
+  city            String
+  state           String
+  name            String?
+  landmark        String?
+  User            User?             @relation(fields: [userId], references: [id])
+  userId          String?           @db.Uuid
+  ApprovalRequest ApprovalRequest[]
+  Vehicle         Vehicle[]
+  RealEstateAgent RealEstateAgent[]
+  Property        Property[]
+
+  @@unique([street, suburb, city, zipcode])
+  @@index([zipcode])
+  @@index([suburb])
 }
 
 model Seller {
@@ -268,12 +375,44 @@ model Vehicle {
   @@index([ownerId])
 }
 
-// service schema
+model PropSeller {
+  id          String     @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name        String
+  lastname    String
+  email       String
+  phoneNumber String
+  Property    Property[]
+}
 
-model InspectionService {
-  id      String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  name    String    @unique
-  Booking Booking[]
+model Property {
+  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+
+  // Categorization
+  isResidential       Boolean
+  isFrequentTraveller Boolean
+  dealType            DealType
+  propertyType        PropertyType
+  purchaseReason      PurchaseReason
+  occupierType        OccupierType
+
+  // Relationships
+  inspectionForId String   @db.Uuid
+  inspectionFor   Customer @relation("InspectionFor", fields: [inspectionForId], references: [id])
+
+  booking  RE_Booking? @relation(fields: [reBookingId], references: [id])
+  seller   PropSeller? @relation(fields: [sellerId], references: [id])
+  sellerId String?     @db.Uuid
+
+  // Specifics
+  propertyAddress   Address  @relation(fields: [propertyAddressId], references: [id])
+  propertyAddressId String   @db.Uuid
+  totalArea         String?
+  numberOfRooms     String?
+  isNew             Boolean?
+  reBookingId       String?  @db.Uuid
+
+  @@index([id])
+  @@index([inspectionForId])
 }
 
 model Booking {
@@ -295,18 +434,8 @@ model Booking {
   inspectionServiceId String            @db.Uuid
   Order               Order[]
   InspectionReport    InspectionReport?
-}
-
-model Package {
-  id          String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  bookings    Booking[]
-  price       Int
-  strikePrice Int?
-  name        String    @unique
-  description String    @db.Text
-  items       String[]
-  perks       String[]
-  orders      Order[]
+  RE_Package          RE_Package        @relation(fields: [rE_PackageId], references: [id])
+  rE_PackageId        String            @db.Uuid
 }
 
 model Order {
@@ -321,58 +450,49 @@ model Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy     Mechanic? @relation(fields: [mechanicId], references: [id])
-  mechanicId      String?   @db.Uuid
+  fulfilledBy     Mechanic?   @relation(fields: [mechanicId], references: [id])
+  mechanicId      String?     @db.Uuid
   totalOrderValue Int
+  RE_Package      RE_Package? @relation(fields: [rE_PackageId], references: [id])
+  rE_PackageId    String?     @db.Uuid
 }
 
-model ApprovalRequest {
-  id                             String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  status                         ApprovalStatus
-  certificate_3                  String
-  certificate_4                  String?
-  publicLiabilityInsurance       String
-  professionalIndemnityInsurance String?
-  ausIdentificationDoc           String
-  ABN                            String
-  workshopAddress                Address?           @relation(fields: [addressId], references: [id])
-  addressId                      String             @db.Uuid
-  experience                     MechanicExperience
-  Mechanic                       Mechanic           @relation(fields: [mechanicId], references: [id])
-  mechanicId                     String             @unique @db.Uuid
+model RE_Booking {
+  id                String               @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  owner             Customer             @relation("RE_BookingOwner", fields: [ownerId], references: [id])
+  ownerId           String               @db.Uuid
+  package           RE_Package           @relation(fields: [packageId], references: [id])
+  packageId         String               @db.Uuid
+  service           RE_InspectionService @relation(fields: [inspectionServiceId], references: [id])
+  agent             RealEstateAgent?     @relation(fields: [agentId], references: [id])
+  agentId           String?              @db.Uuid
+  dateTimeOfBooking DateTime
 
-  @@unique([status, id, experience, ABN])
+  // Timestamps
+  createdAt                    DateTime                    @default(now())
+  updatedAt                    DateTime                    @updatedAt
+  inspectionServiceId          String                      @db.Uuid
+  order                        RE_Order[]
+  InspectionReport             RealEstateInspectionReport? @relation(fields: [realEstateInspectionReportId], references: [id])
+  realEstateInspectionReportId String?                     @db.Uuid
+  Property                     Property[]
 }
 
-model Review {
-  id         String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  isVerified Boolean?
-  message    String?
-  rating     Float
-  photos     String[]
-  customer   Customer @relation(fields: [customerId], references: [id])
-  customerId String   @db.Uuid
-  Mechanic   Mechanic @relation(fields: [mechanicId], references: [id])
-  mechanicId String   @db.Uuid
-}
+model RE_Order {
+  id           String     @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  initiatedBy  Customer   @relation(fields: [customerId], references: [id])
+  customerId   String     @db.Uuid
+  package      RE_Package @relation(fields: [packageId], references: [id])
+  packageId    String     @db.Uuid
+  booking      RE_Booking @relation(fields: [bookingId], references: [id])
+  bookingId    String     @unique @db.Uuid
+  isFullfilled Boolean
+  // paymentId given by the payments provider 
+  paymentId    String?
 
-model Notification {
-  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-}
-
-model StripeCustomerAccount {
-  id               String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  stripeCustomerId String
-  paymentIntents   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
-  paymentMethods   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
-  customer         Customer @relation(fields: [customerId], references: [id])
-  customerId       String   @unique @db.Uuid
-}
-
-enum Transmission {
-  AUTOMATIC
-  MANUAL
-  HYBRID
+  fulfilledBy     RealEstateAgent? @relation(fields: [reAgentId], references: [id])
+  reAgentId       String?          @db.Uuid
+  totalOrderValue Int
 }
 
 model InspectionReport {
@@ -394,30 +514,6 @@ model InspectionReport {
   additionalComments     String       @db.Text()
   recommendation         Json
   url                    String
-}
-
-// This is an enum for the condition of the property
-enum PropertyCondition {
-  EXCELLENT
-  GOOD
-  FAIR
-  POOR
-}
-
-// This is an enum for the crime rate in the area
-enum CrimeRate {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-// This is an enum for the neighborhood vibe
-enum NeighborhoodVibe {
-  FAMILY_FRIENDLY
-  QUIET
-  BUSTLING
-  TRENDY
-  OTHER
 }
 
 model RealEstateInspectionReport {
@@ -447,4 +543,47 @@ model RealEstateInspectionReport {
   reportUrl          String?
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
+  RE_Booking         RE_Booking[]
+}
+
+model InspectionService {
+  id      String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name    String    @unique
+  Booking Booking[]
+}
+
+model RE_InspectionService {
+  id       String       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name     String       @unique
+  bookings RE_Booking[]
+}
+
+model Package {
+  id          String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  bookings    Booking[]
+  price       Int
+  strikePrice Int?
+  name        String    @unique
+  description String    @db.Text
+  items       String[]
+  perks       String[]
+  orders      Order[]
+}
+
+model RE_Package {
+  id          String       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  price       Int
+  strikePrice Int?
+  name        String       @unique
+  description String       @db.Text
+  items       String[]
+  perks       String[]
+  RE_Booking  RE_Booking[]
+  RE_Order    RE_Order[]
+  Booking     Booking[]
+  Order       Order[]
+}
+
+model Notification {
+  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
 }
