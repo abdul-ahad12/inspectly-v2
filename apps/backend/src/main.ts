@@ -12,6 +12,8 @@ async function bootstrap() {
     origin: [
       'https://mechanic.inspectly.com.au',
       'https://customer.inspectly.com.au',
+      'https://admin.inspectly.com.au',
+      'https://inspectly.com.au',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: 'Content-Type, Authorization',

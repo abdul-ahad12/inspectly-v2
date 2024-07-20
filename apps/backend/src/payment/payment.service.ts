@@ -198,8 +198,8 @@ export class PaymentService {
   async createPaymentMethod(
     paymentMethodType: Stripe.PaymentMethodCreateParams.Type,
     details:
-      | Stripe.PaymentMethodCreateParams.Card
-      | Stripe.PaymentMethodCreateParams.Card,
+      | Stripe.PaymentMethodCreateParams.Card1
+      | Stripe.PaymentMethodCreateParams.Card2,
   ) {
     const paymentMethod = await this.paymentClient.paymentMethods.create({
       type: paymentMethodType,
