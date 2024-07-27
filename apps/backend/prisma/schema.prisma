@@ -128,6 +128,7 @@ enum DealType {
 enum PurchaseReason {
   INVESTMENT
   RESIDENCE
+  OTHER
 }
 
 enum OccupierType {
@@ -204,11 +205,24 @@ model RealEstateAgent {
   RealEstateInspectionReport RealEstateInspectionReport[]
   RE_Booking                 RE_Booking[]
   RE_Order                   RE_Order[]
+  ReAgentApprovalRequest     ReAgentApprovalRequest?
 
   @@unique([userId, phoneNumber])
   @@index([available])
   @@index([id])
   @@index([phoneNumber])
+}
+
+model ReAgentApprovalRequest {
+  id                   String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  status               ApprovalStatus
+  ausIdentificationDoc String
+  ABN                  String
+  experience           RealEstateAgentExperience
+  realEstateAgent      RealEstateAgent           @relation(fields: [agentId], references: [id])
+  agentId              String                    @unique @db.Uuid
+
+  @@unique([status, id, experience, ABN])
 }
 
 model Mechanic {
@@ -379,9 +393,12 @@ model PropSeller {
   id          String     @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   name        String
   lastname    String
-  email       String
-  phoneNumber String
+  email       String     @unique
+  phoneNumber String     @unique
   Property    Property[]
+
+  @@index([email])
+  @@index([phoneNumber])
 }
 
 model Property {
@@ -407,7 +424,7 @@ model Property {
   propertyAddress   Address  @relation(fields: [propertyAddressId], references: [id])
   propertyAddressId String   @db.Uuid
   totalArea         String?
-  numberOfRooms     String?
+  numberOfRooms     Int?
   isNew             Boolean?
   reBookingId       String?  @db.Uuid
 
@@ -434,8 +451,6 @@ model Booking {
   inspectionServiceId String            @db.Uuid
   Order               Order[]
   InspectionReport    InspectionReport?
-  RE_Package          RE_Package        @relation(fields: [rE_PackageId], references: [id])
-  rE_PackageId        String            @db.Uuid
 }
 
 model Order {
@@ -450,11 +465,9 @@ model Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy     Mechanic?   @relation(fields: [mechanicId], references: [id])
-  mechanicId      String?     @db.Uuid
+  fulfilledBy     Mechanic? @relation(fields: [mechanicId], references: [id])
+  mechanicId      String?   @db.Uuid
   totalOrderValue Int
-  RE_Package      RE_Package? @relation(fields: [rE_PackageId], references: [id])
-  rE_PackageId    String?     @db.Uuid
 }
 
 model RE_Booking {
@@ -475,7 +488,7 @@ model RE_Booking {
   order                        RE_Order[]
   InspectionReport             RealEstateInspectionReport? @relation(fields: [realEstateInspectionReportId], references: [id])
   realEstateInspectionReportId String?                     @db.Uuid
-  Property                     Property[]
+  property                     Property[]
 }
 
 model RE_Order {
@@ -517,21 +530,18 @@ model InspectionReport {
 }
 
 model RealEstateInspectionReport {
-  id                        String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  propertyAddress           String
-  inspector                 RealEstateAgent   @relation(fields: [inspectorId], references: [id])
-  inspectorId               String            @db.Uuid
-  inspectionDate            DateTime
-  askingPriceCompetitive    Boolean
-  legalOrZoningIssues       Boolean
-  propertyCondition         PropertyCondition
-  immediateRepairsNeeded    Boolean
-  potentialAppreciation     Boolean
-  appreciationJustification String            @db.Text
-  proximityToMajorRoads     String            @db.Text
-  futureDevelopmentPlans    Boolean
-  parkingAvailable          Boolean
-  parkingDetails            String?           @db.Text
+  id              String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  propertyAddress String
+  inspector       RealEstateAgent @relation(fields: [inspectorId], references: [id])
+  inspectorId     String          @db.Uuid
+  inspectionDate  DateTime
+
+  isAskingPriceCompetitive Boolean?
+  isLegalOrZoningIssues    Boolean?
+  isImmediateRepairsNeeded Boolean?
+  isFutureDevelopmentPlans Boolean?
+  isParkingAvailable       Boolean?
+  proximityToMajorRoads    String?  @db.Text
 
   propertyInfo       Json
   nearbyFacilities   Json
@@ -580,8 +590,6 @@ model RE_Package {
   perks       String[]
   RE_Booking  RE_Booking[]
   RE_Order    RE_Order[]
-  Booking     Booking[]
-  Order       Order[]
 }
 
 model Notification {

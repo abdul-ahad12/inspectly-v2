@@ -14,6 +14,9 @@ import { InspectionReportModule } from './inspection-report/inspection-report.mo
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { APP_GUARD } from '@nestjs/core'
 import { ReBookingModule } from './re-booking/re-booking.module'
+import { ReBookingPackageModule } from './re-package/re-booking-package.module'
+import { ReInspectionServiceModule } from './re-inspection-service/re-inspection-service.module'
+import { ReInspectionReportModule } from './re-inspection-report/re-inspection-report.module'
 
 @Module({
   imports: [
@@ -42,6 +45,9 @@ import { ReBookingModule } from './re-booking/re-booking.module'
     InspectionServiceModule,
     InspectionReportModule,
     ReBookingModule,
+    ReBookingPackageModule,
+    ReInspectionServiceModule,
+    ReInspectionReportModule,
   ],
   providers: [
     {

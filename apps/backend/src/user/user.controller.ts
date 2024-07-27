@@ -430,18 +430,21 @@ export class UserController {
   @Patch('re-agent/:id')
   async updateReAgentById(@Req() req: Request, @Res() res: Response) {
     const { body, params } = req
+    console.log('Params', params)
 
     try {
-      if (!params.id || !body.mechanic) {
+      if (!params.id) {
         res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
           message: 'The request is invalid,\n please provide a valid request',
-          error: new Error('Invalid Request Body'),
+          error: {
+            code: 400,
+          },
         })
       }
       const updatedAgent = await this.agentService.updateREAgentById(
         params.id,
-        body.mechanic,
+        body,
       )
       res.status(HttpStatus.OK).json({
         success: true,
@@ -449,6 +452,7 @@ export class UserController {
         data: updatedAgent,
       })
     } catch (error) {
+      console.error(error)
       res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message:

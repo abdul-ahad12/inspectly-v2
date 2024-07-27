@@ -1,6 +1,7 @@
 import z from 'zod'
 import { ZServiceEnum } from '../../enums/service/reService.enum'
 import { ZCreatePropertyRoSchema } from '../../property/create'
+import { ZCreatePropSellerRoSchema } from '../../propertySeller/create'
 
 const ZCreateREBookingRoSchema = z.object({
   customerId: z.string().uuid(),
@@ -17,7 +18,8 @@ const ZCreateREBookingRoSchema = z.object({
   ),
   service: ZServiceEnum,
   property: ZCreatePropertyRoSchema,
-  // propSeller: ZCreateSellerRoSchema,
+  propSeller: ZCreatePropSellerRoSchema,
 })
 
+export type ICreateREBookingRoSchema = z.infer<typeof ZCreateREBookingRoSchema>
 export { ZCreateREBookingRoSchema }

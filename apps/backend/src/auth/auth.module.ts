@@ -14,6 +14,7 @@ import { MechanicService } from '@/user/mechanic/mechanic.service'
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { BookingService } from '@/booking/booking.service'
 import { REAgentService } from '@/user/real-estate-agent/agent.service'
+import { ReBookingService } from '@/re-booking/re-booking.service'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { REAgentService } from '@/user/real-estate-agent/agent.service'
     PrismaService,
     SocketGateway,
     BookingService,
+    ReBookingService,
   ],
   exports: [AuthService, CustomerService, JwtStrategy],
 })

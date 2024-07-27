@@ -7,7 +7,9 @@ const ZCreateREAgentRoMainSchema = z.object({
   user: ZCreateREAgentUserRoSchema,
   REAgent: ZCreateREAgentRoSchema,
   verifiedOn: z.string().datetime(),
-  //   approvalRequest: ZCreateMechApprovalReqRoSchema,
+  verificationDocs: z.object({
+    ausIdentification: z.string().url(),
+  }),
   // address: ZCreateAddressRoSchema,
 })
 
