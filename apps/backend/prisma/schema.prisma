@@ -165,10 +165,11 @@ model User {
   customer        Customer?
   RealEstateAgent RealEstateAgent?
 
-  savedAddresses Address[]
+  savedAddresses            Address[]
   // Timestamps
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  ServiceProviderStripeData ServiceProviderStripeData?
 
   @@unique([id, phoneNumber])
   @@index([id])
@@ -206,8 +207,6 @@ model RealEstateAgent {
   RE_Booking                 RE_Booking[]
   RE_Order                   RE_Order[]
   ReAgentApprovalRequest     ReAgentApprovalRequest?
-  StripeConnectAccount       StripeConnectAccount         @relation(fields: [stripeConnectAccountId], references: [id])
-  stripeConnectAccountId     String                       @unique @db.Uuid
 
   @@unique([userId, phoneNumber])
   @@index([available])
@@ -250,13 +249,11 @@ model Mechanic {
   user                User      @relation(fields: [userId, phoneNumber], references: [id, phoneNumber])
   Booking             Booking[]
 
-  userId                 String               @unique @db.Uuid
-  phoneNumber            String               @unique
-  Order                  Order[]
+  userId           String            @unique @db.Uuid
+  phoneNumber      String            @unique
+  Order            Order[]
   // reviewId    String  @db.Uuid
-  InspectionReport       InspectionReport?
-  StripeConnectAccount   StripeConnectAccount @relation(fields: [stripeConnectAccountId], references: [id])
-  stripeConnectAccountId String               @unique @db.Uuid
+  InspectionReport InspectionReport?
 
   @@unique([userId, phoneNumber])
   @@index([available])
@@ -264,25 +261,26 @@ model Mechanic {
   @@index([phoneNumber])
 }
 
-model StripeConnectAccount {
-  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+// model StripeConnectAccount {
+//   id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
 
-  connectAcctId      String           @unique
-  payoutsEnabled     Boolean
-  bankAccountDetails Json[]
-  bankAccountStatus  String
-  requirements       Json
-  mechanic           Mechanic?
-  reAgent            RealEstateAgent?
-  lastOrder          DateTime?
-  lastMechOrder      Order?           @relation(fields: [lastMechOrderId], references: [id])
-  lastMechOrderId    String?          @db.Uuid
-  lastReAgentOrder   RE_Order?        @relation(fields: [lastReAgentOrderId], references: [id])
-  lastReAgentOrderId String?          @db.Uuid
-  totalEarnings      BigInt?
+//   connectAcctId      String           @unique
+//   payoutsEnabled     Boolean
+//   bankAccountDetails Json[]
+//   bankAccountStatus  String
+//   requirements       Json
+//   mechanic           Mechanic?        @relation(fields: [mechanicId], references: [id])
+//   reAgent            RealEstateAgent?
+//   lastOrder          DateTime?
+//   lastMechOrder      Order?           @relation(fields: [lastMechOrderId], references: [id])
+//   lastMechOrderId    String?          @db.Uuid
+//   lastReAgentOrder   RE_Order?        @relation(fields: [lastReAgentOrderId], references: [id])
+//   lastReAgentOrderId String?          @db.Uuid
+//   totalEarnings      BigInt?
+//   mechanicId         String?          @db.Uuid
 
-  @@index([connectAcctId])
-}
+//   @@index([connectAcctId])
+// }
 
 model ApprovalRequest {
   id                             String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
@@ -315,35 +313,35 @@ model Review {
 }
 
 model Customer {
-  id                    String                 @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  profilePic            String?
-  alternateNumber       String?
-  user                  User                   @relation(fields: [userId, phoneNumber], references: [id, phoneNumber])
-  cars                  Vehicle[]              @relation("Owner")
-  bookings              Booking[]              @relation("BookingOwner")
-  userId                String                 @unique @db.Uuid
-  email                 String?                @unique
-  phoneNumber           String                 @unique
-  Order                 Order[]
-  Review                Review[]
-  StripeCustomerAccount StripeCustomerAccount?
-  RE_Order              RE_Order[]
-  RE_Booking            RE_Booking[]           @relation("RE_BookingOwner")
-  Property              Property[]             @relation("InspectionFor")
+  id                 String              @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  profilePic         String?
+  alternateNumber    String?
+  user               User                @relation(fields: [userId, phoneNumber], references: [id, phoneNumber])
+  cars               Vehicle[]           @relation("Owner")
+  bookings           Booking[]           @relation("BookingOwner")
+  userId             String              @unique @db.Uuid
+  email              String?             @unique
+  phoneNumber        String              @unique
+  Order              Order[]
+  Review             Review[]
+  RE_Order           RE_Order[]
+  RE_Booking         RE_Booking[]        @relation("RE_BookingOwner")
+  Property           Property[]          @relation("InspectionFor")
+  customerStripeData CustomerStripeData?
 
   @@unique([userId, phoneNumber])
   @@index([id])
   @@index([phoneNumber])
 }
 
-model StripeCustomerAccount {
-  id               String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
-  stripeCustomerId String
-  paymentIntents   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
-  paymentMethods   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
-  customer         Customer @relation(fields: [customerId], references: [id])
-  customerId       String   @unique @db.Uuid
-}
+// model StripeCustomerAccount {
+//   id               String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+//   stripeCustomerId String
+//   paymentIntents   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
+//   paymentMethods   Json? // validate this fields externally (prisma doesn't support json schema's to validate on fields)
+//   customer         Customer @relation(fields: [customerId], references: [id])
+//   customerId       String   @unique @db.Uuid
+// }
 
 model Address {
   id              String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
@@ -489,10 +487,10 @@ model Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy          Mechanic?              @relation(fields: [mechanicId], references: [id])
-  mechanicId           String?                @db.Uuid
-  totalOrderValue      Int
-  StripeConnectAccount StripeConnectAccount[]
+  fulfilledBy     Mechanic?         @relation(fields: [mechanicId], references: [id])
+  mechanicId      String?           @db.Uuid
+  totalOrderValue Int
+  CustomerPayment CustomerPayment[]
 }
 
 model RE_Booking {
@@ -528,10 +526,9 @@ model RE_Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy          RealEstateAgent?       @relation(fields: [reAgentId], references: [id])
-  reAgentId            String?                @db.Uuid
-  totalOrderValue      Int
-  StripeConnectAccount StripeConnectAccount[]
+  fulfilledBy     RealEstateAgent? @relation(fields: [reAgentId], references: [id])
+  reAgentId       String?          @db.Uuid
+  totalOrderValue Int
 }
 
 model InspectionReport {
@@ -620,4 +617,178 @@ model RE_Package {
 
 model Notification {
   id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+}
+
+model CustomerStripeData {
+  id               String                  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customer         Customer                @relation(fields: [customerId], references: [id])
+  customerId       String                  @unique @db.Uuid
+  stripeCustomerId String                  @unique
+  totalSpent       Float                   @default(0)
+  paymentIntents   CustomerPaymentIntent[]
+  paymentMethods   CustomerPaymentMethod[]
+  payments         CustomerPayment[]
+}
+
+model CustomerPaymentIntent {
+  id                    String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customerStripeDataId  String             @db.Uuid
+  customerStripeData    CustomerStripeData @relation(fields: [customerStripeDataId], references: [id])
+  amount                Float
+  status                String
+  stripePaymentIntentId String             @unique
+}
+
+model CustomerPaymentMethod {
+  id                   String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customerStripeDataId String             @db.Uuid
+  customerStripeData   CustomerStripeData @relation(fields: [customerStripeDataId], references: [id])
+  stripeMethodId       String             @unique
+  type                 PaymentMethodType
+  last4                String?
+  brand                String?
+  expiryMonth          Int?
+  expiryYear           Int?
+  isDefault            Boolean            @default(false)
+}
+
+model CustomerPayment {
+  id                    String             @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customerStripeDataId  String             @db.Uuid
+  customerStripeData    CustomerStripeData @relation(fields: [customerStripeDataId], references: [id])
+  order                 Order              @relation(fields: [orderId], references: [id])
+  orderId               String             @unique @db.Uuid
+  amount                Float
+  status                TransactionStatus
+  paymentMethodType     PaymentMethodType
+  paymentMethodId       String
+  stripePaymentIntentId String
+  stripeChargeId        String
+}
+
+model ServiceProviderStripeData {
+  id                String                       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProvider   User                         @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String                       @unique @db.Uuid
+  connectAccount    ConnectAccount?
+  bankAccounts      ServiceProviderBankAccount[]
+  payouts           ServiceProviderPayout[]
+  documents         ServiceProviderDocument[]
+}
+
+model ConnectAccount {
+  id                          String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProviderStripeDataId String                    @unique @db.Uuid
+  serviceProviderStripeData   ServiceProviderStripeData @relation(fields: [serviceProviderStripeDataId], references: [id])
+  stripeConnectId             String                    @unique
+  accountStatus               String
+  payoutsEnabled              Boolean
+  chargesEnabled              Boolean
+  detailsSubmitted            Boolean
+  businessUrl                 String?
+  abn                         String?
+}
+
+model ServiceProviderBankAccount {
+  id                          String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProviderStripeDataId String                    @unique @db.Uuid
+  serviceProviderStripeData   ServiceProviderStripeData @relation(fields: [serviceProviderStripeDataId], references: [id])
+  stripeConnectId             String
+  bankAccountId               String
+  accountHolderName           String
+  bankName                    String
+  last4                       String
+  status                      BankVerificationStatus
+}
+
+model ServiceProviderPayout {
+  id                          String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProviderStripeDataId String                    @unique @db.Uuid
+  serviceProviderStripeData   ServiceProviderStripeData @relation(fields: [serviceProviderStripeDataId], references: [id])
+  stripePayoutId              String
+  amount                      Float
+  status                      TransactionStatus
+  arrivalDate                 DateTime
+  method                      String
+  type                        String
+}
+
+model ServiceProviderDocument {
+  id                          String                    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProviderStripeDataId String                    @unique @db.Uuid
+  serviceProviderStripeData   ServiceProviderStripeData @relation(fields: [serviceProviderStripeDataId], references: [id])
+  documentType                DocumentType
+  verificationType            VerificationType
+  documentUrl                 String
+  verificationStatus          VerificationStatus
+  stripePurpose               String
+}
+
+model PlatformStripeData {
+  id              String                  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  transactionId   String                  @unique
+  amount          Float
+  status          TransactionStatus
+  transactionType PlatformTransactionType
+}
+
+model AdminStripeActionHistory {
+  id         String                @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  adminId    String
+  actionType AdminStripeActionType
+  targetId   String
+  targetType String
+  amount     Float?
+  status     String
+  notes      String?
+  createdAt  DateTime              @default(now())
+}
+
+enum PaymentMethodType {
+  CARD
+  BANK_ACCOUNT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum BankVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum DocumentType {
+  IDENTITY_DOCUMENT
+  BANK_OWNERSHIP_VERIFICATION
+  BUSINESS_LICENSE
+}
+
+enum VerificationType {
+  IDENTITY
+  BANK_ACCOUNT
+  BUSINESS_LICENSE
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum PlatformTransactionType {
+  PAYMENT
+  PAYOUT
+  REFUND
+  TRANSFER
+  FEE
+  ADJUSTMENT
+}
+
+enum AdminStripeActionType {
+  REFUND
+  ACCOUNT_UPDATE
 }
