@@ -41,13 +41,18 @@ export class FileUploadService {
 
   async uploadVerificationDocs(
     file: Express.Multer.File,
-    body: Omit<z.infer<typeof ZUploadVerificationDocRoSchema>, 'file'>,
+    body: {
+      userId: string
+      documents: Omit<z.infer<typeof ZUploadVerificationDocRoSchema>, 'file'>
+    },
   ) {
     try {
-      return await this.paymentService.uploadVerificationDocs(
-        file,
-        body.purpose,
-        body.fileName,
+      return await this.paymentService.uploadVerificationDocuments(
+        body.userId,
+        {
+          ...body.documents,
+          file: file.buffer,
+        },
       )
     } catch (error) {
       console.error(error)

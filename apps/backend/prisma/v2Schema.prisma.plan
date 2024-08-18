@@ -1,0 +1,499 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuidOssp(map: "uuid-ossp")]
+}
+
+// Existing models (updated)
+
+model User {
+  id              String    @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  firstName       String
+  lastName        String
+  phoneNumber     String    @unique
+  email           String?   @unique
+  isPhoneVerified Boolean?  @default(false)
+  verifiedOn      DateTime?
+  isBanned        Boolean?  @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  roles           UserRole[]
+  serviceProvider ServiceProvider?
+  customer        Customer?
+  savedAddresses  Address[]
+  adminActions    AdminStripeActionHistory[]
+
+  @@index([id])
+  @@index([email])
+  @@index([isPhoneVerified])
+}
+
+model UserRole {
+  id          String       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name        String       @unique
+  users       User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id    String     @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name  String     @unique
+  roles UserRole[]
+}
+
+model ServiceProvider {
+  id                     String                       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  user                   User                         @relation(fields: [userId], references: [id])
+  userId                 String                       @unique @db.Uuid
+  description            String?                      @db.Text
+  profilePic             String
+  rating                 Float?                       @default(0)
+  level                  Int?                         @default(1)
+  hasAgreedToPolicies    Boolean
+  available              Boolean                      @default(false)
+  deviceIds              String[]
+  licenseNumber          String?
+  abn                    String?
+  companyName            String?
+  identificationDocument String
+  serviceType            ServiceType                  @relation(fields: [serviceTypeId], references: [id])
+  serviceTypeId          String                       @db.Uuid
+  approvalRequest        ApprovalRequest?
+  reviews                Review[]
+  bookings               Booking[]
+  orders                 Order[]
+  stripeConnectAccount   StripeConnectAccount?
+  reportFormResponses    ReportFormResponse[]
+  customFields           ServiceProviderCustomField[]
+
+  @@index([available])
+  @@index([userId])
+}
+
+model ServiceProviderCustomField {
+  id                String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String          @db.Uuid
+  fieldName         String
+  fieldValue        String
+
+  @@unique([serviceProviderId, fieldName])
+}
+
+model ServiceType {
+  id               String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name             String            @unique
+  description      String?           @db.Text
+  services         Service[]
+  serviceProviders ServiceProvider[]
+  serviceForms     ServiceForm[]
+  packages         Package[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Service {
+  id            String               @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceType   ServiceType          @relation(fields: [serviceTypeId], references: [id])
+  serviceTypeId String               @db.Uuid
+  name          String
+  description   String               @db.Text
+  price         Float
+  strikePrice   Float?
+  platformFees  Float
+  isActive      Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  customFields  ServiceCustomField[]
+  bookings      Booking[]
+}
+
+model ServiceCustomField {
+  id         String  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  service    Service @relation(fields: [serviceId], references: [id])
+  serviceId  String  @db.Uuid
+  fieldName  String
+  fieldValue String
+
+  @@unique([serviceId, fieldName])
+}
+
+model Customer {
+  id               String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String   @unique @db.Uuid
+  profilePic       String?
+  alternateNumber  String?
+  stripeCustomerId String?  @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bookings              Booking[]
+  orders                Order[]
+  reviews               Review[]
+  customerFormResponses CustomerFormResponse[]
+  serviceItems          ServiceItem[]
+
+  @@index([userId])
+}
+
+model Address {
+  id       String  @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  lat      Float
+  long     Float
+  zipcode  String
+  street   String
+  suburb   String
+  city     String
+  state    String
+  name     String?
+  landmark String?
+
+  user         User?         @relation(fields: [userId], references: [id])
+  userId       String?       @db.Uuid
+  serviceItems ServiceItem[]
+
+  @@unique([street, suburb, city, zipcode])
+  @@index([zipcode])
+  @@index([suburb])
+}
+
+model ServiceItem {
+  id           String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customer     Customer                 @relation(fields: [customerId], references: [id])
+  customerId   String                   @db.Uuid
+  address      Address                  @relation(fields: [addressId], references: [id])
+  addressId    String                   @db.Uuid
+  bookings     Booking[]
+  customFields ServiceItemCustomField[]
+
+  @@index([customerId])
+}
+
+model ServiceItemCustomField {
+  id            String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceItem   ServiceItem @relation(fields: [serviceItemId], references: [id])
+  serviceItemId String      @db.Uuid
+  fieldName     String
+  fieldValue    String
+
+  @@unique([serviceItemId, fieldName])
+}
+
+model Booking {
+  id                String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customer          Customer         @relation(fields: [customerId], references: [id])
+  customerId        String           @db.Uuid
+  service           Service          @relation(fields: [serviceId], references: [id])
+  serviceId         String           @db.Uuid
+  serviceItem       ServiceItem      @relation(fields: [serviceItemId], references: [id])
+  serviceItemId     String           @db.Uuid
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String?          @db.Uuid
+  package           Package?         @relation(fields: [packageId], references: [id])
+  packageId         String?          @db.Uuid
+  dateTimeOfBooking DateTime
+  status            BookingStatus
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  customerFormResponse CustomerFormResponse?
+  reportFormResponse   ReportFormResponse?
+  order                Order?
+
+  @@index([customerId])
+  @@index([serviceProviderId])
+}
+
+model Order {
+  id                String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  customer          Customer         @relation(fields: [customerId], references: [id])
+  customerId        String           @db.Uuid
+  booking           Booking          @relation(fields: [bookingId], references: [id])
+  bookingId         String           @unique @db.Uuid
+  serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String?          @db.Uuid
+  isFullfilled      Boolean
+  paymentId         String?
+  totalOrderValue   Float
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([customerId])
+  @@index([serviceProviderId])
+}
+
+model Review {
+  id                String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  isVerified        Boolean?
+  message           String?         @db.Text
+  rating            Float
+  photos            String[]
+  customer          Customer        @relation(fields: [customerId], references: [id])
+  customerId        String          @db.Uuid
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String          @db.Uuid
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([customerId])
+  @@index([serviceProviderId])
+}
+
+model StripeConnectAccount {
+  id                 String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  connectAcctId      String          @unique
+  payoutsEnabled     Boolean
+  bankAccountDetails String[]
+  bankAccountStatus  String
+  requirements       String[]
+  serviceProvider    ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId  String          @unique @db.Uuid
+  lastOrder          DateTime?
+  totalEarnings      BigInt?
+
+  @@index([connectAcctId])
+}
+
+model ServiceForm {
+  id            String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceTypeId String          @db.Uuid
+  name          String
+  description   String          @db.Text
+  type          ServiceFormType
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  stages            ServiceFormStage[]
+  customerResponses CustomerFormResponse[]
+  reportResponses   ReportFormResponse[]
+  serviceType       ServiceType            @relation(fields: [serviceTypeId], references: [id])
+
+  @@unique([serviceTypeId, type, name])
+}
+
+model ServiceFormStage {
+  id            String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceForm   ServiceForm @relation(fields: [serviceFormId], references: [id])
+  serviceFormId String      @db.Uuid
+  name          String
+  description   String      @db.Text
+  order         Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  fields ServiceFormField[]
+
+  @@unique([serviceFormId, order])
+}
+
+model ServiceFormField {
+  id                 String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceFormStage   ServiceFormStage @relation(fields: [serviceFormStageId], references: [id])
+  serviceFormStageId String           @db.Uuid
+  name               String
+  label              String
+  type               FieldType
+  isRequired         Boolean
+  placeholder        String?
+  helpText           String?
+  order              Int
+  options            Json? // For SELECT and MULTISELECT fields
+  validations        Json? // For custom validations
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@unique([serviceFormStageId, name])
+  @@index([type])
+}
+
+model CustomerFormResponse {
+  id            String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceForm   ServiceForm @relation(fields: [serviceFormId], references: [id])
+  serviceFormId String      @db.Uuid
+  booking       Booking     @relation(fields: [bookingId], references: [id])
+  bookingId     String      @unique @db.Uuid
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  customerId    String      @db.Uuid
+  responses     Json
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([serviceFormId])
+  @@index([customerId])
+}
+
+model ReportFormResponse {
+  id                String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceForm       ServiceForm     @relation(fields: [serviceFormId], references: [id])
+  serviceFormId     String          @db.Uuid
+  booking           Booking         @relation(fields: [bookingId], references: [id])
+  bookingId         String          @unique @db.Uuid
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String          @db.Uuid
+  responses         Json
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([serviceFormId])
+  @@index([serviceProviderId])
+}
+
+model Package {
+  id            String      @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id])
+  serviceTypeId String      @db.Uuid
+  name          String
+  description   String      @db.Text
+  price         Float
+  strikePrice   Float?
+  items         String[]
+  perks         String[]
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  bookings      Booking[]
+
+  @@unique([serviceTypeId, name])
+}
+
+model PlatformStripeData {
+  id                String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  transactionId     String   @unique
+  transactionType   String
+  amount            Float
+  currency          String
+  status            String
+  customerId        String?
+  serviceProviderId String?
+  orderId           String?
+  paymentMethodType String?
+  paymentMethodId   String?
+  fees              Float?
+  netAmount         Float?
+  description       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([transactionType, status, customerId, serviceProviderId])
+}
+
+model PlatformMetrics {
+  id                     String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  date                   DateTime @unique
+  totalTransactions      Int      @default(0)
+  totalTransactionVolume Float    @default(0)
+  totalFees              Float    @default(0)
+  activeCustomers        Int      @default(0)
+  activeServiceProviders Int      @default(0)
+  averageOrderValue      Float    @default(0)
+  customerRetentionRate  Float?
+  providerRetentionRate  Float?
+  disputeRate            Float?
+  averageResolutionTime  Float?
+  netPromoterScore       Float?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([date])
+}
+
+model AdminStripeActionHistory {
+  id         String   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  admin      User     @relation(fields: [adminId], references: [id])
+  adminId    String   @db.Uuid
+  actionType String
+  targetId   String
+  targetType String
+  amount     Float?
+  currency   String?
+  status     String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, actionType, targetType])
+}
+
+model ApprovalRequest {
+  id                String          @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  status            ApprovalStatus
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceProviderId String          @unique @db.Uuid
+  documents         Document[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model Document {
+  id                String           @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+  name              String
+  url               String
+  type              DocumentType
+  isStripeDoc       Boolean          @default(false)
+  isSensitive       Boolean          @default(false)
+  approvalRequest   ApprovalRequest? @relation(fields: [approvalRequestId], references: [id])
+  approvalRequestId String?          @db.Uuid
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([type])
+  @@index([isStripeDoc])
+  @@index([isSensitive])
+}
+
+// Enums
+
+enum ServiceFormType {
+  CUSTOMER_INPUT
+  SERVICE_REPORT
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DATE
+  TIME
+  DATETIME
+  SELECT
+  MULTISELECT
+  CHECKBOX
+  RADIO
+  FILE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  REUPLOAD_REQUESTED
+}
+
+enum DocumentType {
+  VERIFICATION
+  REPORT
+  INVOICE
+  RECIEPT
+  SYSTEM_GEN_REPORT
+  USER_UPLOADED
+  STRIPE_DOC
+  OTHER
+}

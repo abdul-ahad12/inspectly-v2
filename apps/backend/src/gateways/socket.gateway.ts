@@ -70,6 +70,12 @@ export class SocketGateway implements OnGatewayInit {
     console.log(`Notification sent to mechanic ${mechanicId}`)
   }
 
+  notifyServiceProvider(userId: string, data: any): void {
+    const roomName = `provider-${userId}`
+    this.server.to(roomName).emit('new-booking', data)
+    console.log(`Notification sent to service provider ${userId}`)
+  }
+
   //  // Emit notification to all real estate agents
   //  notifyAgents(agentId: string, data: any): void {
   //   const roomName = `agent-${agentId}`

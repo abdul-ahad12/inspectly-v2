@@ -206,6 +206,8 @@ model RealEstateAgent {
   RE_Booking                 RE_Booking[]
   RE_Order                   RE_Order[]
   ReAgentApprovalRequest     ReAgentApprovalRequest?
+  StripeConnectAccount       StripeConnectAccount         @relation(fields: [stripeConnectAccountId], references: [id])
+  stripeConnectAccountId     String                       @unique @db.Uuid
 
   @@unique([userId, phoneNumber])
   @@index([available])
@@ -248,16 +250,38 @@ model Mechanic {
   user                User      @relation(fields: [userId, phoneNumber], references: [id, phoneNumber])
   Booking             Booking[]
 
-  userId           String            @unique @db.Uuid
-  phoneNumber      String            @unique
-  Order            Order[]
+  userId                 String               @unique @db.Uuid
+  phoneNumber            String               @unique
+  Order                  Order[]
   // reviewId    String  @db.Uuid
-  InspectionReport InspectionReport?
+  InspectionReport       InspectionReport?
+  StripeConnectAccount   StripeConnectAccount @relation(fields: [stripeConnectAccountId], references: [id])
+  stripeConnectAccountId String               @unique @db.Uuid
 
   @@unique([userId, phoneNumber])
   @@index([available])
   @@index([id])
   @@index([phoneNumber])
+}
+
+model StripeConnectAccount {
+  id String @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
+
+  connectAcctId      String           @unique
+  payoutsEnabled     Boolean
+  bankAccountDetails Json[]
+  bankAccountStatus  String
+  requirements       Json
+  mechanic           Mechanic?
+  reAgent            RealEstateAgent?
+  lastOrder          DateTime?
+  lastMechOrder      Order?           @relation(fields: [lastMechOrderId], references: [id])
+  lastMechOrderId    String?          @db.Uuid
+  lastReAgentOrder   RE_Order?        @relation(fields: [lastReAgentOrderId], references: [id])
+  lastReAgentOrderId String?          @db.Uuid
+  totalEarnings      BigInt?
+
+  @@index([connectAcctId])
 }
 
 model ApprovalRequest {
@@ -465,9 +489,10 @@ model Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy     Mechanic? @relation(fields: [mechanicId], references: [id])
-  mechanicId      String?   @db.Uuid
-  totalOrderValue Int
+  fulfilledBy          Mechanic?              @relation(fields: [mechanicId], references: [id])
+  mechanicId           String?                @db.Uuid
+  totalOrderValue      Int
+  StripeConnectAccount StripeConnectAccount[]
 }
 
 model RE_Booking {
@@ -503,9 +528,10 @@ model RE_Order {
   // paymentId given by the payments provider 
   paymentId    String?
 
-  fulfilledBy     RealEstateAgent? @relation(fields: [reAgentId], references: [id])
-  reAgentId       String?          @db.Uuid
-  totalOrderValue Int
+  fulfilledBy          RealEstateAgent?       @relation(fields: [reAgentId], references: [id])
+  reAgentId            String?                @db.Uuid
+  totalOrderValue      Int
+  StripeConnectAccount StripeConnectAccount[]
 }
 
 model InspectionReport {

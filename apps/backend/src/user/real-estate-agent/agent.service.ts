@@ -41,11 +41,14 @@ export class REAgentService {
 
   // need to verify
   async createConnectAccount(
-    body: z.infer<typeof ZcreateConnectAccountRoSchema>,
+    accountData: z.infer<typeof ZcreateConnectAccountRoSchema>,
   ) {
     try {
       const agentConnectAccount =
-        await this.paymenentService.createConnectAccount(body)
+        await this.paymenentService.createServiceProviderConnectAccount(
+          accountData.metadata.userId,
+          accountData,
+        )
       console.log(agentConnectAccount)
       if (!agentConnectAccount) {
         throw new HttpException(
@@ -61,28 +64,8 @@ export class REAgentService {
           HttpStatus.BAD_REQUEST,
         )
       }
-      const personAccount = await this.paymenentService.createPersonAccount({
-        ...body.individual,
-        accountId: agentConnectAccount.id,
-      })
 
-      console.log(personAccount)
-
-      if (!personAccount) {
-        throw new HttpException(
-          {
-            success: false,
-            message: 'Connect Account Not Created',
-            error: {
-              message: "Couldn't create Mechanics's Connect Account",
-              code: HttpStatus.BAD_REQUEST,
-              error: personAccount,
-            },
-          },
-          HttpStatus.BAD_REQUEST,
-        )
-      }
-      return { agentConnectAccount, personAccount }
+      return { agentConnectAccount }
     } catch (error) {
       console.error(error)
       throw new HttpException(

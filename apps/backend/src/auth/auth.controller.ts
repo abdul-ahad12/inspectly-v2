@@ -47,14 +47,14 @@ export class AuthController {
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         path: '/',
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 hour; adjust to your needs
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 1 hour;
         secure: secure, // Use HTTPS in production
         sameSite: 'lax', // Adjust this according to your cross-site request needs
       })
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
         path: '/',
-        maxAge: 1000 * 60 * 15, // 1 hour; adjust to your needs
+        maxAge: 1000 * 60 * 15, // 1 hour;
         secure: secure, // Use HTTPS in production
         sameSite: 'lax', // Adjust this according to your cross-site request needs
       })
@@ -101,10 +101,6 @@ export class AuthController {
           })
         }
 
-        console.log(
-          `Refresh Tokens: ${cookies['refreshToken']}`,
-          `XSRF Tokens: ${headers['x-xsrf-token']}`,
-        )
         if (!cookies['refreshToken'] || !headers['x-xsrf-token']) {
           // the user is not banned, generate the otp and send to client
           try {
@@ -493,26 +489,26 @@ export class AuthController {
     }
   }
 
-  @Post('connect/mechanic')
-  async createConnectAccount(@Req() req: Request, @Res() res: Response) {
-    try {
-      // Call the customerService.createCustomer method and await its result
-      const mechanic = await this.mechanicService.createConnectAccount(req.body)
+  // @Post('connect/mechanic')
+  // async createConnectAccount(@Req() req: Request, @Res() res: Response) {
+  //   try {
+  //     // Call the customerService.createCustomer method and await its result
+  //     const mechanic = await this.mechanicService.createConnectAccount(req.body)
 
-      res.status(HttpStatus.CREATED).json({
-        success: true,
-        message: 'User Created Successfully',
-        data: mechanic,
-      })
-    } catch (error: unknown) {
-      console.error(error)
-      res.status(HttpStatus.BAD_REQUEST).json({
-        success: false,
-        message: 'Could not create the mechanic',
-        error: error,
-      })
-    }
-  }
+  //     res.status(HttpStatus.CREATED).json({
+  //       success: true,
+  //       message: 'User Created Successfully',
+  //       data: mechanic,
+  //     })
+  //   } catch (error: unknown) {
+  //     console.error(error)
+  //     res.status(HttpStatus.BAD_REQUEST).json({
+  //       success: false,
+  //       message: 'Could not create the mechanic',
+  //       error: error,
+  //     })
+  //   }
+  // }
 
   /********************************
    *********************************

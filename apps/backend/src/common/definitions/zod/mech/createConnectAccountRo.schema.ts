@@ -62,6 +62,19 @@ const ZcreateConnectAccountRoSchema = z.object({
     mcc: z.string().max(4),
     url: z.string().url(),
   }),
+  external_account: z.object({
+    account_number: z.string(),
+    routing_number: z.string(),
+    account_holder_name: z.string(),
+    documents: z.object({
+      bank_account_ownership_verification: z.object({
+        files: z.string().array(),
+      }),
+    }),
+  }),
+  metadata: z.object({
+    userId: z.string().uuid(),
+  }),
 })
 
 export { ZcreateConnectAccountRoSchema }

@@ -1,13 +1,13 @@
 import { zodSignupRequestSchema } from '@/common/definitions/zod/signupRequestSchema'
+import { PaymentService } from '@/payment/payment.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import {
-  Address,
   Booking,
   Customer,
+  CustomerStripeData,
   Order,
   Prisma,
   Review,
-  StripeCustomerAccount,
   User,
   Vehicle,
 } from '@prisma/client'
@@ -16,7 +16,10 @@ import { z } from 'zod'
 
 @Injectable()
 export class CustomerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentClient: PaymentService,
+  ) {}
 
   async createCustomer(
     reqBody: z.infer<typeof zodSignupRequestSchema>,
@@ -42,7 +45,7 @@ export class CustomerService {
       role: reqBody.role,
       customer: {
         create: {
-          // email: reqBody.email,
+          email: reqBody.email,
         },
       },
     }
@@ -58,6 +61,23 @@ export class CustomerService {
       // throw new Error("The user could not be created,\nplease check your details")
       console.error('The Customer could not be created')
     }
+
+    await this.paymentClient.addStripeCustomer({
+      email: reqBody.email,
+      name: `${reqBody.firstName} ${reqBody.lastName}`,
+      address: {
+        city: reqBody.address.city,
+        country: 'AU',
+        state: reqBody.address.state,
+        line1: reqBody.address.street,
+        line2: reqBody.address.suburb,
+        postal_code: reqBody.address.zipcode,
+      },
+      metadata: {
+        customerId: user.customer.id,
+      },
+    })
+
     return user
   }
 
@@ -72,15 +92,26 @@ export class CustomerService {
   }
 
   async getCustomerById(id: string): Promise<
-    Customer & {
-      user: User & {
-        savedAddresses: Address[]
+    Prisma.CustomerGetPayload<{
+      include: {
+        bookings: true
+        cars: true
+        Order: true
+        user: {
+          include: {
+            savedAddresses: true
+          }
+        }
+        Review: true
+        customerStripeData: {
+          include: {
+            paymentIntents: true
+            paymentMethods: true
+            payments: true
+          }
+        }
       }
-      bookings: Booking[]
-      cars: Vehicle[]
-      Order: Order[]
-      Review: Review[]
-    }
+    }>
   > {
     const customer = await this.prisma.customer.findUnique({
       where: {
@@ -96,6 +127,13 @@ export class CustomerService {
           },
         },
         Review: true,
+        customerStripeData: {
+          include: {
+            paymentIntents: true,
+            paymentMethods: true,
+            payments: true,
+          },
+        },
       },
     })
     if (!customer) {
@@ -137,7 +175,7 @@ export class CustomerService {
       cars: Vehicle[]
       Order: Order[]
       Review: Review[]
-      stripeCustomerAccount?: StripeCustomerAccount
+      customerStripeData?: CustomerStripeData
     }
   > {
     try {
@@ -152,7 +190,7 @@ export class CustomerService {
           cars: true,
           Order: true,
           Review: true,
-          StripeCustomerAccount: true,
+          customerStripeData: true,
         },
       })
       if (!newCustomer) {

@@ -1,12 +1,15 @@
-import { DynamicModule, Provider, Global } from '@nestjs/common'
+import { DynamicModule, Provider, Global, Scope } from '@nestjs/common'
 import Stripe from 'stripe'
 import { PAYMENT_CLIENT } from './payment.constants'
 import { PaymentController } from './payment.controller'
 import { PaymentService } from './payment.service'
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { PrismaService } from '@/prisma/prisma.service'
-import { CustomerService } from '@/user/customer/customer.service'
 import { BookingService } from '@/booking/booking.service'
+import { UserModule } from '@/user/user.module'
+import { UserService } from '@/user/user.service'
+import { JwtService } from '@nestjs/jwt'
+import { LoggerModule } from '@/logger/logger.module'
 
 @Global()
 export class PaymentModule {
@@ -19,15 +22,21 @@ export class PaymentModule {
     }
 
     return {
+      imports: [UserModule, LoggerModule],
       module: PaymentModule,
       controllers: [PaymentController],
       providers: [
+        {
+          provide: PaymentService,
+          useClass: PaymentService,
+          scope: Scope.REQUEST,
+        },
         paymentProvider,
-        PaymentService,
         SocketGateway,
         PrismaService,
-        CustomerService,
         BookingService,
+        UserService,
+        JwtService,
       ],
       exports: [PaymentService],
     }

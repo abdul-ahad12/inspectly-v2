@@ -207,6 +207,25 @@ export class BookingService {
     return updatedOrder
   }
 
+  async getOrderByOrderId(orderId: string) {
+    return this.prismaService.order.findUnique({
+      where: { id: orderId },
+      include: {
+        booking: {
+          include: {
+            package: true,
+            service: true,
+          },
+        },
+        CustomerPayment: {
+          include: {
+            customerStripeData: true,
+          },
+        },
+      },
+    })
+  }
+
   async getAllBookings() {
     const bookings = await this.prismaService.booking.findMany({
       include: {
@@ -299,9 +318,7 @@ export class BookingService {
           },
           {
             Order: {
-              some: {
-                isFullfilled: false,
-              },
+              isFullfilled: false,
             },
           },
         ],

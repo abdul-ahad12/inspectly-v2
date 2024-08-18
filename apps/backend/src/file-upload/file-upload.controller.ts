@@ -32,6 +32,7 @@ import { z } from 'zod'
 // import { ZUploadVerificationDocRoSchema } from '@/common/definitions/zod/files'
 import { ZstripeDocUploadPurposeEnum } from '@/common/definitions/zod/enums/files/stripe/purpose'
 import { PaymentService } from '@/payment/payment.service'
+import { RequestWithUser } from '@/common/interfaces/customReq.interface'
 
 @Controller('file-upload')
 export class FileUploadController {
@@ -223,13 +224,16 @@ export class FileUploadController {
     @UploadedFile() file: Express.Multer.File,
     @Param('purpose') purpose: z.infer<typeof ZstripeDocUploadPurposeEnum>,
     @Query('fileName') fileName: string,
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Res() res: Response,
   ) {
     try {
       const stripeFile = await this.uploadService.uploadVerificationDocs(file, {
-        purpose,
-        fileName,
+        userId: req.user?.id,
+        documents: {
+          purpose,
+          fileName,
+        },
       })
       res.status(HttpStatus.OK).json({
         success: true,

@@ -39,8 +39,10 @@ export class MechanicService {
   ) {
     try {
       const mechConnectAccount =
-        await this.paymenentService.createConnectAccount(body)
-      console.log(mechConnectAccount)
+        await this.paymenentService.createServiceProviderConnectAccount(
+          body.metadata.userId,
+          body,
+        )
       if (!mechConnectAccount) {
         throw new HttpException(
           {
@@ -55,27 +57,26 @@ export class MechanicService {
           HttpStatus.BAD_REQUEST,
         )
       }
-      const personAccount = await this.paymenentService.createPersonAccount({
-        ...body.individual,
-        accountId: mechConnectAccount.id,
-      })
-      console.log(personAccount)
+      // const personAccount = await this.paymenentService.createPersonAccount({
+      //   ...body.individual,
+      //   accountId: mechConnectAccount.id,
+      // })
 
-      if (!personAccount) {
-        throw new HttpException(
-          {
-            success: false,
-            message: 'Connect Account Not Created',
-            error: {
-              message: "Couldn't create Mechanics's Connect Account",
-              code: HttpStatus.BAD_REQUEST,
-              error: personAccount,
-            },
-          },
-          HttpStatus.BAD_REQUEST,
-        )
-      }
-      return { mechConnectAccount, personAccount }
+      // if (!personAccount) {
+      //   throw new HttpException(
+      //     {
+      //       success: false,
+      //       message: 'Connect Account Not Created',
+      //       error: {
+      //         message: "Couldn't create Mechanics's Connect Account",
+      //         code: HttpStatus.BAD_REQUEST,
+      //         error: personAccount,
+      //       },
+      //     },
+      //     HttpStatus.BAD_REQUEST,
+      //   )
+      // }
+      return { mechConnectAccount }
     } catch (error) {
       console.error(error)
       throw new HttpException(

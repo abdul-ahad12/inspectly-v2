@@ -12,6 +12,7 @@ import { REAgentService } from './real-estate-agent/agent.service'
 import { ReBookingService } from '@/re-booking/re-booking.service'
 
 @Module({
+  imports: [PaymentModule],
   controllers: [UserController],
   providers: [
     UserService,
@@ -23,8 +24,7 @@ import { ReBookingService } from '@/re-booking/re-booking.service'
     BookingService,
     ReBookingService,
     JwtStrategy,
-    PaymentModule,
   ],
-  exports: [UserService],
+  exports: [UserService, CustomerService],
 })
 export class UserModule {}

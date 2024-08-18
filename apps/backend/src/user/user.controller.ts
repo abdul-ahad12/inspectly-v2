@@ -39,6 +39,7 @@ export class UserController {
       })
     }
   }
+
   @Get('customer/:id')
   async getCustomerById(@Req() req: Request, @Res() res: Response) {
     const { id } = req.params

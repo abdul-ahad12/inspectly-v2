@@ -43,6 +43,6 @@ import { ReBookingService } from '@/re-booking/re-booking.service'
     BookingService,
     ReBookingService,
   ],
-  exports: [AuthService, CustomerService, JwtStrategy],
+  exports: [AuthService, CustomerService, JwtModule],
 })
 export class AuthModule {}

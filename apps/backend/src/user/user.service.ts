@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common'
-import { Prisma, User } from '@prisma/client'
+import { Address, Customer, Mechanic, Prisma, User } from '@prisma/client'
 import { zodSignupRequestSchema } from 'src/common/definitions/zod/signupRequestSchema'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { z } from 'zod'
+import { CustomerService } from './customer/customer.service'
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly customerService: CustomerService,
+  ) {}
 
   async createUser(
     reqBody: z.infer<typeof zodSignupRequestSchema>,
@@ -61,7 +65,13 @@ export class UserService {
     return user
   }
 
-  async getUserById(id: string): Promise<User> {
+  async getUserById(id: string): Promise<
+    User & {
+      customer: Customer | null
+      mechanic: Mechanic | null
+      savedAddresses: Address[]
+    }
+  > {
     const user = await this.prisma.user.findUnique({
       where: {
         id: id,
@@ -69,6 +79,7 @@ export class UserService {
       include: {
         customer: true,
         mechanic: true,
+        savedAddresses: true,
       },
     })
     if (!user) {

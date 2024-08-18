@@ -17,6 +17,7 @@ import { ReBookingModule } from './re-booking/re-booking.module'
 import { ReBookingPackageModule } from './re-package/re-booking-package.module'
 import { ReInspectionServiceModule } from './re-inspection-service/re-inspection-service.module'
 import { ReInspectionReportModule } from './re-inspection-report/re-inspection-report.module'
+import { AuthGuard } from './guards/auth.guard'
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ReInspectionReportModule } from './re-inspection-report/re-inspection-r
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    AuthGuard,
   ],
 })
 export class AppModule {
