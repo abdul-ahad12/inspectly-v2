@@ -157,8 +157,8 @@ export class PaymentService {
   ): Promise<Stripe.File> {
     try {
       const serviceProviderStripeData =
-        await this.prisma.serviceProviderStripeData.findUnique({
-          where: { userId },
+        await this.prisma.serviceProviderStripeData.findFirst({
+          where: { serviceProviderId: userId },
         })
 
       if (!serviceProviderStripeData) {
@@ -359,9 +359,8 @@ export class PaymentService {
         routing_number: accountData.external_account.routing_number,
       },
       tos_acceptance: {
-        date: Math.floor(
-          new Date(accountData.tos_acceptance.date).getTime() / 1000,
-        ),
+        // date: Number(accountData.tos_acceptance.date),
+        date: this.getValidTosAcceptanceDate(accountData.tos_acceptance.date),
         ip: accountData.tos_acceptance.ip,
       },
       capabilities: {
@@ -396,6 +395,25 @@ export class PaymentService {
     return stripeAccountData
   }
 
+  private getValidTosAcceptanceDate(providedDate?: string | number): number {
+    const minDate = new Date('2009-01-01').getTime() / 1000
+    const now = Math.floor(Date.now() / 1000)
+
+    if (providedDate) {
+      const date =
+        typeof providedDate === 'string'
+          ? Math.floor(new Date(providedDate).getTime() / 1000)
+          : providedDate
+
+      if (date > minDate && date < now) {
+        return date
+      }
+    }
+
+    // If the provided date is invalid or not provided, return a recent past date
+    return now - 86400 // 24 hours ago
+  }
+
   async createServiceProviderConnectAccount(
     userId: string,
     accountData: z.infer<typeof ZcreateConnectAccountRoSchema>,
@@ -407,6 +425,7 @@ export class PaymentService {
         userId,
         this.formatAccountData(accountData),
       )
+      console.log(account)
 
       // Store account details in our database
       await this.prisma.serviceProviderStripeData.create({
@@ -817,7 +836,7 @@ export class PaymentService {
 
       await this.prisma.serviceProviderBankAccount.create({
         data: {
-          serviceProviderStripeData: { connect: { userId } },
+          serviceProviderStripeData: { connect: { serviceProviderId: userId } },
           stripeConnectId: serviceProvider.connectAccount.stripeConnectId,
           bankAccountId: bankAccount.id,
           accountHolderName: bankAccount.account_holder_name,
@@ -848,7 +867,7 @@ export class PaymentService {
 
       await this.prisma.serviceProviderPayout.create({
         data: {
-          serviceProviderStripeData: { connect: { userId } },
+          serviceProviderStripeData: { connect: { serviceProviderId: userId } },
           stripePayoutId: payout.id,
           amount: amount,
           status: payout.status as TransactionStatus,
@@ -1122,7 +1141,7 @@ export class PaymentService {
     try {
       const serviceProvider =
         await this.prisma.serviceProviderStripeData.findUnique({
-          where: { userId },
+          where: { serviceProviderId: userId },
           include: { connectAccount: true },
         })
       if (!serviceProvider) {

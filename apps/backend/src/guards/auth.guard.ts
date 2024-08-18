@@ -17,6 +17,8 @@ export class AuthGuard implements CanActivate {
     const accessToken = this.extractTokenFromCookie(request)
     const xsrfToken = request.headers['x-xsrf-token']
 
+    console.log('xsrfToken, accessToken:', { xsrfToken, accessToken })
+
     if (!accessToken) {
       throw new UnauthorizedException('Access token is missing')
     }
@@ -27,7 +29,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       // Combine JWT secret and XSRF token for verification
-      const secretKey = process.env.JWT_SECRET + xsrfToken
+      const secretKey = process.env.JWT_ACCESS_SECRET + xsrfToken
 
       const payload = await this.jwtService.verifyAsync(accessToken, {
         secret: secretKey,

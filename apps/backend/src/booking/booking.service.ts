@@ -318,7 +318,9 @@ export class BookingService {
           },
           {
             Order: {
-              isFullfilled: false,
+              some: {
+                isFullfilled: false,
+              },
             },
           },
         ],

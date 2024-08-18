@@ -357,7 +357,9 @@ export class ReBookingService {
           },
           {
             order: {
-              isFullfilled: false,
+              some: {
+                isFullfilled: false,
+              },
             },
           },
         ],

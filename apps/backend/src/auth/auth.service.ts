@@ -220,6 +220,7 @@ export class AuthService {
       if (user.isPhoneVerified) {
       }
       const tokens = await this.generateAndStoreAllTokens(user)
+      console.log('xsrfToken:', tokens.xsrfToken)
       // if an otp has not been passed, this means it is to refresh the user session
       if (!otp) {
         return { ...tokens, user }
@@ -269,11 +270,12 @@ export class AuthService {
       await this.validateOtp(phoneNumber, otp)
       const onboardingToken = await this.generateOnboardingToken(phoneNumber)
 
+      console.log(onboardingToken)
       // add logic for other user types here
       switch (type) {
         case 'MECHANIC':
           await this.createMechSignupStore(phoneNumber).then((a) =>
-            console.log(a),
+            console.log('createMechStore', a),
           )
           break
         default:
@@ -365,6 +367,7 @@ export class AuthService {
     const encryptedPhone = this.encryptPhone(phoneNumber)
     const key = `user:${encryptedPhone}`
     const userStore = await this.redisService.get(key)
+    console.log('userStore:', userStore)
     return this.mechanicService.createMechanic(JSON.parse(userStore))
   }
 

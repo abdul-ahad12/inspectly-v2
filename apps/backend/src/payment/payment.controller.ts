@@ -313,12 +313,15 @@ export class PaymentController {
   // Service Provider Endpoints
 
   @Post('service-provider/create-connect-account')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.MECHANIC)
   async createServiceProviderConnectAccount(
     @Req() req: Req,
     @Res() res: Response,
   ) {
     try {
       const userId = req.user.id
+      console.log(userId)
       const result =
         await this.paymentService.createServiceProviderConnectAccount(
           userId,
@@ -379,8 +382,8 @@ export class PaymentController {
   }
 
   @Post('admin/initiate-refund')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async initiateRefund(@Req() req: Req, @Res() res: Response) {
     try {
       const userId = req.user.id
@@ -397,8 +400,8 @@ export class PaymentController {
   }
 
   @Get('admin/connect-accounts')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async listConnectAccounts(@Req() req: Req, @Res() res: Response) {
     try {
       const accounts = await this.paymentService.listConnectAccounts()
@@ -409,8 +412,8 @@ export class PaymentController {
   }
 
   @Get('admin/connect-account/:accountId')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async getConnectAccountDetails(@Req() req: Req, @Res() res: Response) {
     try {
       const { accountId } = req.params
@@ -423,8 +426,8 @@ export class PaymentController {
   }
 
   @Get('admin/platform-transactions')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async getPlatformTransactions(@Req() req: Req, @Res() res: Response) {
     try {
       const { startDate, endDate, type } = req.query
@@ -440,8 +443,8 @@ export class PaymentController {
   }
 
   @Get('admin/revenue-report')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async generateRevenueReport(@Req() req: Req, @Res() res: Response) {
     try {
       const { startDate, endDate } = req.query
@@ -456,8 +459,8 @@ export class PaymentController {
   }
 
   @Put('admin/platform-settings')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   async updatePlatformSettings(@Req() req: Req, @Res() res: Response) {
     try {
       const userId = req.user.id

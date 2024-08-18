@@ -309,11 +309,12 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const { body, cookies } = req
+    const { body, headers } = req
 
+    console.log('headers:', headers)
     if (
-      !cookies['x-onboarding-token'] ||
-      !(cookies['x-onboarding-token'].length > 0)
+      !headers['x-onboarding-token'] ||
+      !(headers['x-onboarding-token'].length > 0)
     ) {
       res.status(HttpStatus.UNAUTHORIZED).json({
         succes: false,
@@ -326,7 +327,7 @@ export class AuthController {
     }
 
     const phoneNumber = this.authService.decryptOnboardingToken(
-      cookies['x-onboarding-token'],
+      headers['x-onboarding-token'] as string,
     )
 
     try {
@@ -363,12 +364,11 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    const { cookies } = req
+    const { headers } = req
     const phoneNumber = this.authService.decryptOnboardingToken(
-      cookies['x-onboarding-token'],
+      headers['x-onboarding-token'] as string,
     )
     try {
-      // Call the customerService.createCustomer method and await its result
       await this.authService.persistMechanic(phoneNumber)
       const { accessToken, refreshToken, user, xsrfToken } =
         await this.authService.login(phoneNumber)
@@ -422,7 +422,7 @@ export class AuthController {
       const token = await this.authService.signupInitiate(
         phoneNumber,
         otp,
-        'CUSTOMER',
+        'MECHANIC',
       )
 
       // Set the JWT in an HTTP-only cookie
