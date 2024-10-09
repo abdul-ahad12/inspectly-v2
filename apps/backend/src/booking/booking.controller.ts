@@ -29,13 +29,12 @@ export class BookingController {
       req.body,
     )
     if (!mechanics) {
-      res.status(HttpStatus.BAD_REQUEST).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         error: 'unknown',
       })
     }
-
-    res.status(HttpStatus.OK).json({
+    return res.status(HttpStatus.OK).json({
       success: true,
       data: mechanics,
     })
@@ -45,24 +44,21 @@ export class BookingController {
   async acceptBooking(@Req() req: Request, @Res() res: Response) {
     const { id: bookingId } = req.params
     const { mechanicId } = req.body
-    console.log('/accept/:id', req.params, mechanicId)
     try {
       const updateBookingAndNotifyCustomer =
         await this.bookingService.acceptBooking(mechanicId, bookingId)
-      console.log('/accept/:id', updateBookingAndNotifyCustomer)
-
-      res.status(HttpStatus.OK).json({
+      return res.status(HttpStatus.OK).json({
         success: true,
         message: 'Booking Confirmed and Updated, Customer Notified',
         data: updateBookingAndNotifyCustomer,
       })
     } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: 'An unexpected error happened. Please try again',
-        errror: {
+        error: {
           name: error.name || 'UNHANDLED_EXCEPTION',
-          message: error.message || 'An unexpected error occured',
+          message: error.message || 'An unexpected error occurred',
           error: error,
         },
       })
@@ -76,23 +72,21 @@ export class BookingController {
   ) {
     try {
       const bookings = await this.bookingService.createBooking(req.body)
-
       if (!bookings) {
-        res.status(HttpStatus.BAD_REQUEST).json({
-          succes: false,
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
           message: 'Could not create an order booking',
           error: bookings,
         })
       }
-
-      res.status(HttpStatus.CREATED).json({
+      return res.status(HttpStatus.CREATED).json({
         success: true,
         message: 'Order booking created successfully',
         data: bookings,
       })
     } catch (error) {
       console.error(error)
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message,
         error: {
@@ -107,12 +101,10 @@ export class BookingController {
   @Put(':id')
   async updateBookingByBookingId(@Req() req: Request, @Res() res: Response) {
     const { id } = req.params
-
     if (!id) {
-      res.status(HttpStatus.BAD_REQUEST).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         message: 'INVALID_REQUEST, no id param found.',
-        reason: `id param not found, ${id}`,
         error: {
           name: 'INVALID_REQUEST',
           message: 'Invalid request, Parameter Id was not found',
@@ -125,13 +117,13 @@ export class BookingController {
         id,
         req.body,
       )
-      res.status(HttpStatus.OK).json({
+      return res.status(HttpStatus.OK).json({
         success: true,
-        message: 'booking updated successfully',
+        message: 'Booking updated successfully',
         data: updatedBooking,
       })
     } catch (error) {
-      res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
+      return res.status(error.status || HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: error.message || 'UNEXPECTED_ERROR',
         error: error,
@@ -139,72 +131,117 @@ export class BookingController {
     }
   }
 
-  @Get()
-  async getAllBookings(@Req() req: Request, @Res() res: Response) {
+  @Get('/customer/:customerId/bookings')
+  async getBookingsForCustomer(
+    @Param('customerId') customerId: string,
+    @Res() res: Response,
+  ) {
     try {
-      const bookings = await this.bookingService.getAllBookings()
-
+      const bookings =
+        await this.bookingService.getBookingsForCustomer(customerId)
       if (!bookings) {
-        res.status(HttpStatus.BAD_REQUEST).json({
-          succes: false,
-          message: 'Could not find bookings',
-          error: bookings,
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          message: 'No bookings found for this customer',
+          data: [],
         })
       }
-
-      res.status(HttpStatus.OK).json({
+      return res.status(HttpStatus.OK).json({
         success: true,
         message: `Found ${bookings.length} bookings`,
         data: bookings,
       })
     } catch (error) {
-      console.error(error)
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: error.message,
-        error: {
-          name: error.name,
-          code: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error,
-        },
+        message: 'Could not retrieve bookings',
+        error: error,
       })
     }
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.bookingService.getBookingByBookingId(id)
-  }
-
-  @Get('mechanic/:id')
-  async getBookingsByMechanicId(@Req() req: Request, @Res() res: Response) {
-    const { id: mechanicId } = req.params
+  @Get('/unassigned/:customerId')
+  async getUnassignedBookings(
+    @Param('customerId') customerId: string,
+    @Res() res: Response,
+  ) {
     try {
       const bookings =
-        await this.bookingService.getAllBookingsByMechanicId(mechanicId)
-      if (!bookings) {
-        res.status(HttpStatus.BAD_REQUEST).json({
-          succes: false,
-          message: 'Could not find bookings',
-          error: bookings,
-        })
-      }
-
-      res.status(HttpStatus.OK).json({
+        await this.bookingService.getBookingsWhereMechanicIsNull(customerId)
+      return res.status(HttpStatus.OK).json({
         success: true,
-        message: `Found ${bookings.length} bookings`,
         data: bookings,
       })
     } catch (error) {
-      console.error(error)
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: error.message,
-        error: {
-          name: error.name,
-          code: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: error,
-        },
+        message: 'Could not retrieve bookings',
+        error: error,
+      })
+    }
+  }
+
+  @Get('/incomplete/:customerId')
+  async getIncompleteBookings(
+    @Param('customerId') customerId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const bookings =
+        await this.bookingService.getBookingsWhereMechanicIsNotNullAndOrderIsUnfulfilled(
+          customerId,
+        )
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: bookings,
+      })
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Could not retrieve bookings',
+        error: error,
+      })
+    }
+  }
+
+  @Get('/completed/:customerId')
+  async getCompletedBookings(
+    @Param('customerId') customerId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const bookings =
+        await this.bookingService.getBookingsWhereOrderIsFulfilled(customerId)
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: bookings,
+      })
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Could not retrieve bookings',
+        error: error,
+      })
+    }
+  }
+
+  @Get('/assigned/:customerId')
+  async getAssignedBookings(
+    @Param('customerId') customerId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const bookings =
+        await this.bookingService.getBookingsWhereMechanicIsNotNull(customerId)
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: bookings,
+      })
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Could not retrieve bookings',
+        error: error,
       })
     }
   }
