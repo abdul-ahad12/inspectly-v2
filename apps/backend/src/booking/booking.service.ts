@@ -75,6 +75,7 @@ export class BookingService {
                   city: vehicle.vehicleAddress.city,
                   street: vehicle.vehicleAddress.street,
                   suburb: vehicle.vehicleAddress.suburb,
+                  state: vehicle.vehicleAddress.state,
                   zipcode: vehicle.vehicleAddress.zipcode,
                   name: vehicle.vehicleAddress.name ?? null,
                   landmark: vehicle.vehicleAddress.landmark ?? null,
@@ -204,6 +205,25 @@ export class BookingService {
       )
     }
     return updatedOrder
+  }
+
+  async getOrderByOrderId(orderId: string) {
+    return this.prismaService.order.findUnique({
+      where: { id: orderId },
+      include: {
+        booking: {
+          include: {
+            package: true,
+            service: true,
+          },
+        },
+        CustomerPayment: {
+          include: {
+            customerStripeData: true,
+          },
+        },
+      },
+    })
   }
 
   async getAllBookings() {
@@ -341,6 +361,7 @@ export class BookingService {
   }
 
   async getBookingByBookingId(id: string) {
+    console.log('id', id)
     const booking = await this.prismaService.booking.findUnique({
       where: {
         id: id,
@@ -371,11 +392,129 @@ export class BookingService {
     return booking
   }
 
-  async getPendingBookings() {
-    return `This action updates a  booking`
+  async updateBookingStatus(
+    id: string,
+    bookingStatus: { isFullfilled: boolean },
+  ) {
+    const booking = await this.prismaService.booking.update({
+      where: {
+        id: id,
+      },
+      data: {
+        Order: {
+          update: {
+            where: {
+              bookingId: id,
+            },
+            data: {
+              isFullfilled: bookingStatus.isFullfilled,
+            },
+          },
+        },
+      },
+      include: {
+        InspectionReport: true,
+        mechanic: true,
+        Order: true,
+        owner: true,
+        package: true,
+        vehicle: true,
+        service: true,
+      },
+    })
+
+    if (!booking) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'Could Not update the booking',
+          error: {
+            error: booking,
+            message: 'Possible Prisma Error',
+          },
+        },
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return booking
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} booking`
+  async getBookingsForCustomer(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: { ownerId: customerId },
+      include: {
+        Order: true,
+        mechanic: true,
+        package: true,
+        vehicle: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNull(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: null,
+        ownerId: customerId,
+      },
+      include: {
+        Order: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNotNullAndOrderIsUnfulfilled(
+    customerId: string,
+  ) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: {
+          not: null,
+        },
+        ownerId: customerId,
+        Order: {
+          some: {
+            isFullfilled: false,
+          },
+        },
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
+  }
+
+  async getBookingsWhereOrderIsFulfilled(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        ownerId: customerId,
+        Order: {
+          some: {
+            isFullfilled: true,
+          },
+        },
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNotNull(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: {
+          not: null,
+        },
+        ownerId: customerId,
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
   }
 }
