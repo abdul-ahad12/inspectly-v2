@@ -361,6 +361,7 @@ export class BookingService {
   }
 
   async getBookingByBookingId(id: string) {
+    console.log('id', id)
     const booking = await this.prismaService.booking.findUnique({
       where: {
         id: id,
@@ -437,5 +438,83 @@ export class BookingService {
     }
 
     return booking
+  }
+
+  async getBookingsForCustomer(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: { ownerId: customerId },
+      include: {
+        Order: true,
+        mechanic: true,
+        package: true,
+        vehicle: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNull(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: null,
+        ownerId: customerId,
+      },
+      include: {
+        Order: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNotNullAndOrderIsUnfulfilled(
+    customerId: string,
+  ) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: {
+          not: null,
+        },
+        ownerId: customerId,
+        Order: {
+          some: {
+            isFullfilled: false,
+          },
+        },
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
+  }
+
+  async getBookingsWhereOrderIsFulfilled(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        ownerId: customerId,
+        Order: {
+          some: {
+            isFullfilled: true,
+          },
+        },
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
+  }
+
+  async getBookingsWhereMechanicIsNotNull(customerId: string) {
+    return this.prismaService.booking.findMany({
+      where: {
+        mechanicId: {
+          not: null,
+        },
+        ownerId: customerId,
+      },
+      include: {
+        Order: true,
+        mechanic: true,
+      },
+    })
   }
 }
