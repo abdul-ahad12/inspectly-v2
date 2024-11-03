@@ -9,19 +9,24 @@
     }
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "git-cz",
     "release": "standard-version",
-    "build:debug": "npm exec nx run-many --target=build --verbose",
+    "build:debug": "pnpm exec nx run-many --target=build --verbose",
     "lint": "pnpm exec nx run-many --target=lint --verbose",
     "lint:fix": "pnpm exec nx run-many --target=lint --fix --verbose",
     "build": "pnpm exec nx run-many --target=build",
-    "format": "prettier  \"{apps,shared}/**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",
+    "format": "prettier \"{apps,shared}/**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",
     "format:check": "pnpm format --check",
     "format:write": "pnpm format --write",
     "tsc": "pnpm exec nx run-many --target=tsc",
     "validate": "pnpm format:write && pnpm tsc && pnpm lint",
     "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.js": ["eslint --fix", "prettier --write"],
+    "*.ts": ["eslint --fix", "prettier --write"],
+    "*.tsx": ["eslint --fix", "prettier --write"],
+    "*.json": ["prettier --write"]
   },
   "keywords": [],
   "author": "",

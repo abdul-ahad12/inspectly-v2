@@ -14,4 +14,4 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### ✨ Features
 
-* **GitOps Setup:** Add commitizen, commitlint, @commitlint/cz-commitlint inquirer, semVer ([e7b9574](https://github.com/shaiknoorullah/fullstack-boilerplate/commit/e7b95748553db19aa2b57a1ff44d4cc42df6d83e))
+* **GitOps Setup:** Add commitizen, commitlint, @commitlint/cz-commitlint  inquirer, semVer ([e7b9574](https://github.com/shaiknoorullah/fullstack-boilerplate/commit/e7b95748553db19aa2b57a1ff44d4cc42df6d83e))

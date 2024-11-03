@@ -8,11 +8,6 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
 }
 
-// generator custom_generator {
-//   provider = "prisma-generator-fake-data"
-//   /// by default, the file will be generated at `./prisma/fake-data.ts`
-// }
-
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
