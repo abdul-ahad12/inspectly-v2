@@ -62,7 +62,7 @@ export class ReInspectionReportController {
     const { id: mechId } = req.params
     try {
       const inspectionReports =
-        await this.inspectionReport.getAllInspectionReportsByMech(mechId)
+        await this.inspectionReport.getAllInspectionReportsByInspector(mechId)
 
       res.status(HttpStatus.OK).json({
         success: true,

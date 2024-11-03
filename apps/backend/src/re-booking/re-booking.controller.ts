@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Post,
   Put,
   Req,
@@ -194,6 +195,38 @@ export class ReBookingController {
           code: HttpStatus.INTERNAL_SERVER_ERROR,
           error: error,
         },
+      })
+    }
+  }
+
+  @Get('/customer/:customerId/bookings/:status?')
+  async getBookingsForCustomer(
+    @Param('customerId') customerId: string,
+    @Param('status') status: 'PENDING' | 'COMPLETED' | undefined,
+    @Res() res: Response,
+  ) {
+    try {
+      const bookings = await this.reBookingService.getBookingsForCustomer(
+        customerId,
+        status,
+      )
+      if (!bookings.length) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          message: 'No bookings found for this customer',
+          data: [],
+        })
+      }
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Found ${bookings.length} bookings`,
+        data: bookings,
+      })
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: 'Could not retrieve bookings',
+        error: error,
       })
     }
   }

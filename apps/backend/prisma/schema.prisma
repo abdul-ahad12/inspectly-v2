@@ -23,6 +23,12 @@ enum UserRole {
   REAGENT
 }
 
+enum BookingStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
 // for mechanics
 enum ApprovalStatus {
   PENDING
@@ -452,15 +458,16 @@ model Property {
 model Booking {
   id                String            @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   owner             Customer          @relation("BookingOwner", fields: [ownerId], references: [id])
-  ownerId           String            @db.Uuid
+  ownerId           String           @db.Uuid
   package           Package           @relation(fields: [packageId], references: [id])
-  packageId         String            @db.Uuid
+  packageId         String           @db.Uuid
   service           InspectionService @relation(fields: [inspectionServiceId], references: [id])
   vehicle           Vehicle           @relation(fields: [vehicleId], references: [id])
-  vehicleId         String            @unique @db.Uuid
+  vehicleId         String           @unique @db.Uuid
   mechanic          Mechanic?         @relation(fields: [mechanicId], references: [id])
-  mechanicId        String?           @db.Uuid
+  mechanicId        String?          @db.Uuid
   dateTimeOfBooking DateTime
+  status            BookingStatus     @default(PENDING)  // Add this field
 
   // Timestamps
   createdAt           DateTime          @default(now())
@@ -468,6 +475,8 @@ model Booking {
   inspectionServiceId String            @db.Uuid
   Order               Order[]
   InspectionReport    InspectionReport?
+
+  @@index([status]) // Add an index for better query performance
 }
 
 model Order {
@@ -498,6 +507,7 @@ model RE_Booking {
   agent             RealEstateAgent?     @relation(fields: [agentId], references: [id])
   agentId           String?              @db.Uuid
   dateTimeOfBooking DateTime
+  status            BookingStatus        @default(PENDING)  // Add this field
 
   // Timestamps
   createdAt                    DateTime                    @default(now())
@@ -507,6 +517,8 @@ model RE_Booking {
   InspectionReport             RealEstateInspectionReport? @relation(fields: [realEstateInspectionReportId], references: [id])
   realEstateInspectionReportId String?                     @db.Uuid
   property                     Property[]
+
+  @@index([status]) // Add an index for better query performance
 }
 
 model RE_Order {

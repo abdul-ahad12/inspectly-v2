@@ -3,7 +3,7 @@ import { ICreateBookingRoSchema } from '@/common/definitions/zod/bookings/create
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { Booking, Order, Prisma } from '@prisma/client'
+import { Booking, BookingStatus, Order, Prisma } from '@prisma/client'
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -439,10 +439,12 @@ export class BookingService {
 
     return booking
   }
-
-  async getBookingsForCustomer(customerId: string) {
-    return this.prismaService.booking.findMany({
-      where: { ownerId: customerId },
+  async getBookingsForCustomer(customerId: string, status?: BookingStatus) {
+    const bookings = await this.prismaService.booking.findMany({
+      where: {
+        ownerId: customerId,
+        ...(status && { status }),
+      },
       include: {
         Order: true,
         mechanic: true,
@@ -450,6 +452,18 @@ export class BookingService {
         vehicle: true,
       },
     })
+
+    if (!bookings.length) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'No bookings found for this customer',
+        },
+        HttpStatus.NOT_FOUND,
+      )
+    }
+
+    return bookings
   }
 
   async getBookingsWhereMechanicIsNull(customerId: string) {

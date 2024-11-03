@@ -1,7 +1,7 @@
 import { IRealEstateInspectionReportSchema } from '@/common/definitions/zod/realEstateInspectionReport/create'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Prisma, BookingStatus } from '@prisma/client'
 import { formatISO } from 'date-fns'
 
 @Injectable()
@@ -28,6 +28,7 @@ export class ReInspectionReportService {
       inspectorId,
       bookingId,
     } = body
+
     const createObj: Prisma.RealEstateInspectionReportCreateInput = {
       inspector: {
         connect: {
@@ -57,6 +58,7 @@ export class ReInspectionReportService {
       reportUrl: reportUrl,
     }
 
+    // Step 1: Create the inspection report
     const inspectionReport =
       await this.prismaService.realEstateInspectionReport.create({
         data: createObj,
@@ -77,15 +79,21 @@ export class ReInspectionReportService {
       )
     }
 
+    // Step 2: Update the RE_Booking status to COMPLETED
+    await this.prismaService.rE_Booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.COMPLETED },
+    })
+
     return inspectionReport
   }
 
   async getAllInspectionReports() {
     const inspectionReports =
-      await this.prismaService.inspectionReport.findMany({
+      await this.prismaService.realEstateInspectionReport.findMany({
         include: {
-          booking: true,
-          mechanic: true,
+          RE_Booking: true,
+          inspector: true,
         },
       })
 
@@ -102,15 +110,16 @@ export class ReInspectionReportService {
 
     return inspectionReports
   }
-  async getAllInspectionReportsByMech(id: string) {
+
+  async getAllInspectionReportsByInspector(id: string) {
     const inspectionReports =
-      await this.prismaService.inspectionReport.findMany({
+      await this.prismaService.realEstateInspectionReport.findMany({
         where: {
-          mechanicId: id,
+          inspectorId: id,
         },
         include: {
-          booking: true,
-          mechanic: true,
+          RE_Booking: true,
+          inspector: true,
         },
       })
 
@@ -127,6 +136,7 @@ export class ReInspectionReportService {
 
     return inspectionReports
   }
+
   async getAllInspectionReportsByBooking(id: string) {
     const inspectionReports =
       await this.prismaService.inspectionReport.findMany({

@@ -1,7 +1,7 @@
 import { ICreateInspectionReportRoSchema } from '@/common/definitions/zod/inspectionReport/create'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Prisma, BookingStatus } from '@prisma/client'
 
 @Injectable()
 export class InspectionReportService {
@@ -33,6 +33,8 @@ export class InspectionReportService {
       vehicleColor: body.vehicleColor,
       wheelsAndTires: body.wheelIsAndTires,
     }
+
+    // Step 1: Create the inspection report
     const inspectionReport = await this.prismaService.inspectionReport.create({
       data: createObj,
     })
@@ -51,6 +53,12 @@ export class InspectionReportService {
         HttpStatus.BAD_REQUEST,
       )
     }
+
+    // Step 2: Update the booking status to COMPLETED
+    await this.prismaService.booking.update({
+      where: { id: body.bookingId },
+      data: { status: BookingStatus.COMPLETED },
+    })
 
     return inspectionReport
   }
@@ -77,6 +85,7 @@ export class InspectionReportService {
 
     return inspectionReports
   }
+
   async getAllInspectionReportsByMech(id: string) {
     const inspectionReports =
       await this.prismaService.inspectionReport.findMany({
@@ -102,6 +111,7 @@ export class InspectionReportService {
 
     return inspectionReports
   }
+
   async getAllInspectionReportsByBooking(id: string) {
     const inspectionReports =
       await this.prismaService.inspectionReport.findMany({

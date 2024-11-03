@@ -131,16 +131,19 @@ export class BookingController {
     }
   }
 
-  @Get('/customer/:customerId/bookings')
+  @Get('/customer/:customerId/bookings/:status?')
   async getBookingsForCustomer(
     @Param('customerId') customerId: string,
+    @Param('status') status: 'PENDING' | 'COMPLETED' | undefined,
     @Res() res: Response,
   ) {
     try {
-      const bookings =
-        await this.bookingService.getBookingsForCustomer(customerId)
-      if (!bookings) {
-        return res.status(HttpStatus.BAD_REQUEST).json({
+      const bookings = await this.bookingService.getBookingsForCustomer(
+        customerId,
+        status,
+      )
+      if (!bookings.length) {
+        return res.status(HttpStatus.NOT_FOUND).json({
           success: false,
           message: 'No bookings found for this customer',
           data: [],

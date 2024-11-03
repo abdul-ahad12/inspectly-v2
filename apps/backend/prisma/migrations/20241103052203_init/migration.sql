@@ -5,6 +5,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'CUSTOMER', 'MODERATOR', 'MECHANIC', 'REAGENT');
 
 -- CreateEnum
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'COMPLETED', 'CANCELLED');
+
+-- CreateEnum
 CREATE TYPE "ApprovalStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED', 'REUPLOAD_REQUESTED');
 
 -- CreateEnum
@@ -279,6 +282,7 @@ CREATE TABLE "Booking" (
     "vehicleId" UUID NOT NULL,
     "mechanicId" UUID,
     "dateTimeOfBooking" TIMESTAMP(3) NOT NULL,
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "inspectionServiceId" UUID NOT NULL,
@@ -307,6 +311,7 @@ CREATE TABLE "RE_Booking" (
     "packageId" UUID NOT NULL,
     "agentId" UUID,
     "dateTimeOfBooking" TIMESTAMP(3) NOT NULL,
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "inspectionServiceId" UUID NOT NULL,
@@ -691,7 +696,13 @@ CREATE INDEX "Property_inspectionForId_idx" ON "Property"("inspectionForId");
 CREATE UNIQUE INDEX "Booking_vehicleId_key" ON "Booking"("vehicleId");
 
 -- CreateIndex
+CREATE INDEX "Booking_status_idx" ON "Booking"("status");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Order_bookingId_key" ON "Order"("bookingId");
+
+-- CreateIndex
+CREATE INDEX "RE_Booking_status_idx" ON "RE_Booking"("status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RE_Order_bookingId_key" ON "RE_Order"("bookingId");

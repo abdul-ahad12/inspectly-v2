@@ -3,7 +3,7 @@ import { ICreateREBookingRoSchema } from '@/common/definitions/zod/reBooking/cre
 import { SocketGateway } from '@/gateways/socket.gateway'
 import { PrismaService } from '@/prisma/prisma.service'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import { Prisma, RE_Booking, RE_Order } from '@prisma/client'
+import { BookingStatus, Prisma, RE_Booking, RE_Order } from '@prisma/client'
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -134,6 +134,33 @@ export class ReBookingService {
       )
     }
     return order
+  }
+
+  async getBookingsForCustomer(customerId: string, status?: BookingStatus) {
+    const bookings = await this.prismaService.rE_Booking.findMany({
+      where: {
+        ownerId: customerId,
+        ...(status && { status }),
+      },
+      include: {
+        order: true,
+        agent: true,
+        package: true,
+        property: true,
+      },
+    })
+
+    if (!bookings.length) {
+      throw new HttpException(
+        {
+          success: false,
+          message: 'No bookings found for this customer',
+        },
+        HttpStatus.NOT_FOUND,
+      )
+    }
+
+    return bookings
   }
 
   async acceptBooking(agentId: string, bookingId: string): Promise<RE_Booking> {
